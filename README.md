@@ -1,8 +1,10 @@
-# VanguardSec AI - Plataforma Autônoma SOC, SOAR & Active Defense
+# VanguardSec AI — Plataforma SOC, SOAR & Active Defense para Pequenas Empresas
 
-Plataforma de segurança cibernética que monitora servidores Linux e Windows Server em tempo real, executa varreduras de pentest e auditorias de conformidade, analisa ameaças usando Inteligência Artificial de ultra-baixa latência via Groq LPU API (`openai/gpt-oss-20b`), bloqueia os atacantes automaticamente no firewall (SOAR) e gera laudos executivos em PDF para auditoria (LGPD e ISO 27001).
+Plataforma de segurança cibernética *on-premise* que monitora servidores Linux em tempo real, executa varreduras de pentest e auditorias de conformidade, decide a severidade de eventos por **regras determinísticas** (não só por IA), bloqueia atacantes automaticamente no firewall (SOAR) e gera laudos executivos em PDF (LGPD, ISO 27001 e outras normas).
 
-O ecossistema foi projetado sob uma arquitetura híbrida: a coleta de logs e as ações de contenção são mantidas *on-premise*, enquanto o processamento pesado de IA é feito via nuvem da Groq. Isso permite que a aplicação execute com alta performance mesmo em servidores com hardware limitado (4 GB de RAM).
+A análise em linguagem natural é feita via **Groq LPU API** (`openai/gpt-oss-20b`), o que permite rodar em hardware modesto no cliente — a inferência pesada de IA acontece na nuvem, o servidor local só coleta, decide via regras e age.
+
+> **Nota de transparência:** este README reflete o estado real e testado do código nesta data. Seções marcadas como "Roadmap" são planejadas, não implementadas.
 
 ---
 
@@ -10,81 +12,95 @@ O ecossistema foi projetado sob uma arquitetura híbrida: a coleta de logs e as 
 
 ```text
 +-------------------------------------------------------------------------+
-|                      SERVIDORES MONITORADOS                             |
-|               (Ubuntu Linux / Windows Server)                           |
+|                      FROTA DE SERVIDORES (Ubuntu Linux)                 |
+|              cadastrados e criptografados via Painel Web                |
 +-------------------------------------------------------------------------+
                                     |
-                     Coleta Agentless (SSH / WinRM)
-                                    |
-                                    v
-+-------------------------------------------------------------------------+
-|                         VANGUARDSEC ENGINE (Core)                       |
-|   - Leitura de Logs (auth.log / journalctl)                             |
-|   - Criptografia de Dados (Fernet) e Persistência SQLite                |
-+-------------------------------------------------------------------------+
-                                    |
-                    Envio da Telemetria (JSON / Prompt)
+                     Coleta Agentless (SSH via Paramiko)
                                     |
                                     v
 +-------------------------------------------------------------------------+
-|                         GROQ LPU API (Nuvem)                            |
-|                        Modelo: openai/gpt-oss-20b                       |
-|                                                                         |
-|   [Agente Auditor] -> [Agente Trafego] -> [Agente Threat Intel]         |
-|           |                       |                 |                   |
-|           v                       v                 v                   |
-|   [Agente Compliance] -> [Agente Remediacao] -> [Agentes Pentest/Audit] |
+|                    VANGUARDSEC ENGINE (Core, on-premise)                |
+|  - Leitura de logs (auth.log / journalctl)                              |
+|  - TIER 0: regras_deteccao.py decide a SEVERIDADE REAL (determinístico) |
+|  - Criptografia de credenciais (Fernet) e persistência SQLite           |
 +-------------------------------------------------------------------------+
                                     |
-                    Retorno Estruturado (json_object)
+                  Envio da telemetria já triada (JSON / Prompt)
                                     |
                                     v
 +-------------------------------------------------------------------------+
-|                     AÇÕES SOAR & EXPOSIÇÃO DE DADOS                     |
-|   - Active Defense: Injeção UFW e Encerramento de Sessões (Kill Switch) |
-|   - Interface Web Flask: Control Center & Laboratório de IA             |
-|   - Relatórios PDF e Exportação de Métricas em CSV / Power BI           |
+|                    GROQ LPU API (Nuvem) — explicação, não decisão       |
+|                       Modelo: openai/gpt-oss-20b                        |
+|                                                                          |
+|   [Agente Auditor] -> [Threat Intel] -> [Compliance] -> [Remediação]    |
 +-------------------------------------------------------------------------+
-
+                                    |
+                    Retorno estruturado (json_object garantido)
+                                    |
+                                    v
++-------------------------------------------------------------------------+
+|                     AÇÕES SOAR (gatilho = Tier 0, não a IA)             |
+|   - Active Defense: bloqueio UFW e Kill Switch (encerra sessão SSH)     |
+|   - Interface Web Flask: Command Center + Laboratório de IA             |
+|   - Relatórios PDF e exportação CSV / Power BI                          |
++-------------------------------------------------------------------------+
 ```
 
----
-
-## O que o sistema faz
-
-* **Monitoramento Sem Agente (Agentless):** Conecta via SSH (Linux) e WinRM (Windows Server) para ler logs em tempo real sem a necessidade de instalar programas adicionais no servidor alvo.
-* **Análise por IA de Alta Performance (Groq LPU):** Processa os logs com o modelo `openai/gpt-oss-20b` utilizando resposta determinística (`temperature=0.0`) e suporte nativo ao formato `json_object`.
-* **Esteira Completa de Pentest & Auditoria (7 Pilares):** Executa varreduras Nmap com scripts NSE, cruzamento de CVEs (OSV/NVD), auditorias de TLS/SSL, avaliações de Backup e Plano de Recuperação de Desastres (DRP), além de orquestração via OpenVAS.
-* **Bloqueio Automático no Firewall (SOAR):** Aplica regras de bloqueio no `UFW` e encerra sessões SSH ativas de atacantes (Kill Switch) instantaneamente.
-* **Laudos Executivos em PDF:** Gera certificados de conformidade e relatórios de ISO 27001 formatados na pasta `outputs/relatorios_pdf/`.
-* **Painel Web Flask & Power BI Data:** Interface gráfica completa em Flask com suporte a HTTP Basic Auth, monitoramento de frota e exportação de dados para Power BI.
+**Por que a decisão de agir não vem da IA:** modelos de linguagem podem ser inconsistentes na mesma entrada. Quem decide se um evento é grave o suficiente pra acionar bloqueio automático é o `regras_deteccao.py` (contagem de tentativas numa janela de tempo + tipo de ataque) — auditável e reprodutível. A IA (Groq) entra depois, só para **explicar** o evento em linguagem natural e apoiar a auditoria de compliance.
 
 ---
 
-## Módulos e Agentes da Esteira Multi-Tier
+## O que o sistema faz hoje
 
-| Módulo / Agente | O que ele exibe / faz |
-| --- | --- |
-| **Agente Nmap (`agente_nmap.py`)** | Reconhecimento de ativos, varredura de portas abertas e vulnerabilidades via scripts NSE. |
-| **Agente CVE Lookup (`agente_cve_lookup.py`)** | Cruzamento de pacotes do sistema com bases de CVE (OSV / NVD). |
-| **Agente TLS Audit (`agente_tls_audit.py`)** | Verificação de vigência de certificados SSL/mTLS e força de cifras. |
-| **Agente Backup/DRP (`agente_backup_disaster.py`)** | Auditoria de rotinas de cron, retenção e mitigação de riscos de RPO/RTO. |
-| **Agente OpenVAS (`agente_openvas.py`)** | Orquestração e análise consolidada de vulnerabilidades de infraestrutura. |
-| **Agente Auditor (`agente_auditor.py`)** | Tier 1 SOC: Análise primária de logs e extração de Indicadores de Comprometimento (IoCs). |
-| **Agente de Tráfego (`agente_trafego.py`)** | Tier 1.5: Inspeção de fluxo de rede e identificação de anomalias. |
-| **Agente Compliance (`agente_compliance.py`)** | Tier 2: Avaliação regulatória de riscos sob a LGPD (Art. 46) e norma ISO 27001. |
-| **Agente Remediação (`agente_remediacao.py`)** | Tier 3 SOAR: Geração determinística de comandos Bash atômicos para mitigação. |
-| **Agente Threat Intel (`agente_threat_intel.py`)** | Análise de reputação de IoCs e enriquecimento de inteligência de ameaças. |
+- **Monitoramento agentless (SSH/Linux):** conecta via SSH pra ler logs em tempo real, sem instalar nada no servidor monitorado.
+- **Decisão de severidade por regras, não só IA:** `regras_deteccao.py` decide o gatilho de ação; o Groq complementa com explicação.
+- **Análise por IA de baixa latência (Groq):** `openai/gpt-oss-20b`, temperatura 0.0, saída `json_object` garantida nativamente.
+- **Auditoria de vulnerabilidades sob demanda (4 módulos reais):**
+  - Nmap real (scripts NSE) — `agente_nmap.py`
+  - Cruzamento de CVEs via API pública OSV.dev — `agente_cve_lookup.py`
+  - Auditoria de certificado TLS/SSL real (handshake de verdade) — `agente_tls_audit.py`
+  - Auditoria de backup/DRP (crontab, mounts, retenção) — `agente_backup_disaster.py`
+- **Hardening determinístico** (`pentest_scanner.py`): checagens somente-leitura de configuração SSH, firewall, contas suspeitas, portas sensíveis.
+- **Bloqueio automático no firewall (SOAR):** regra UFW + kill switch de sessão SSH, acionados pela severidade real (Tier 0), não pela IA.
+- **Laudos executivos em PDF** e **exportação CSV para Power BI**.
+- **Painel Web Flask** com autenticação obrigatória (HTTP Basic Auth), gestão de frota multi-servidor com senha criptografada (Fernet) por host.
 
 ---
 
-## Principais Destaques
+## Módulos e Agentes
 
-* **Baixíssimo Consumo de Hardware:** Compatível com ambientes restritos a partir de 4 GB de RAM, pois toda a inferência de IA é realizada na nuvem via Groq LPU API.
-* **Respostas em JSON Estruturado Garantido:** Todos os agentes operam com a configuração `response_format={"type": "json_object"}`, evitando falhas de parsing.
-* **Suporte Dual-Platform:** Monitoramento centralizado de servidores Ubuntu (Linux) e Windows Server.
-* **Kill Switch & SOAR Automático:** Atuação ativa em tempo real via UFW e encerramento automático de processos `sshd` maliciosos.
-* **Exportação para Power BI:** Histórico mantido em banco SQLite (`data/vanguard_sec.db`) e exportável via endpoint `/data/vanguard_powerbi_data.csv`.
+| Módulo | Status | O que faz |
+| --- | --- | --- |
+| `regras_deteccao.py` | ✅ Ativo (Tier 0) | Decide a severidade real por regras auditáveis — não é um agente de IA. |
+| `pentest_scanner.py` | ✅ Ativo (Tier 0.5) | Hardening determinístico + backup/DR, somente leitura. |
+| `agente_auditor.py` | ✅ Ativo (Tier 1) | Triagem inicial via IA, extrai IoCs. |
+| `agente_threat_intel.py` | ✅ Ativo | Enriquecimento de reputação de IP/indicador. |
+| `agente_compliance.py` | ✅ Ativo (Tier 2) | LGPD, ISO 27001, NIST CSF, PCI-DSS, CIS, HIPAA + políticas internas (`politicas/`). |
+| `agente_remediacao.py` | ✅ Ativo (Tier 3) | Gera comando de mitigação sugerido (**apenas registrado, nunca executado automaticamente**). |
+| `agente_nmap.py` | ✅ Ativo | Scan real via Nmap + análise de risco por IA. Valida IP antes de escanear. |
+| `agente_cve_lookup.py` | ✅ Ativo | Coleta pacotes via SSH, consulta real na OSV.dev. |
+| `agente_tls_audit.py` | ✅ Ativo | Handshake TLS real, analisa certificado e cifras. |
+| `agente_backup_disaster.py` | ✅ Ativo | Audita crontab/backup/mounts via SSH real. |
+
+
+
+
+---
+
+## Segurança do próprio sistema
+
+- Senhas de servidores criptografadas (Fernet) no SQLite — nunca em texto plano
+- Senha de sudo nunca aparece na linha de comando (evita vazamento via `ps aux` no host remoto)
+- Painel exige autenticação; recusa iniciar sem `.env` configurado (sem credencial padrão previsível)
+- IP validado antes de qualquer ação de bloqueio/kill switch ou varredura Nmap (defesa contra injeção)
+- Cliente Groq com retry/backoff para rate limit e validação antecipada de chave de API
+- Dados de prompt/resposta **não são retidos nem usados para treino** pela Groq (confirmado na política oficial deles)
+
+**Pendências conhecidas** (não resolvidas ainda, listadas por transparência):
+- SSH usa `AutoAddPolicy` — aceita qualquer host key sem verificação (sem proteção contra MITM)
+- Ações do SOAR não têm atribuição de usuário/auditoria individual ainda
+- `agente_trafego.py` segue não integrado a nenhum pipeline
 
 ---
 
@@ -92,41 +108,42 @@ O ecossistema foi projetado sob uma arquitetura híbrida: a coleta de logs e as 
 
 ```text
 VanguardSec-AI/
-├── data/                  # Banco de dados SQLite (vanguard_sec.db)
-├── outputs/               # Laudos em PDF, backups e logs do laboratório de IA
+├── data/                     # Banco SQLite (vanguard_sec.db)
+├── outputs/
 │   ├── relatorios_pdf/
-│   ├── lab_logs/
-│   └── backups/
+│   └── lab_logs/
+├── politicas/                # Políticas internas da empresa (.txt/.md) lidas pelo Tier 2
 ├── src/
-│   ├── ai/                # Agentes de IA Refatorados (Groq API / openai/gpt-oss-20b)
+│   ├── ai/
 │   │   ├── agente_auditor.py
 │   │   ├── agente_backup_disaster.py
 │   │   ├── agente_compliance.py
 │   │   ├── agente_cve_lookup.py
 │   │   ├── agente_nmap.py
-│   │   ├── agente_openvas.py
 │   │   ├── agente_remediacao.py
 │   │   ├── agente_threat_intel.py
 │   │   ├── agente_tls_audit.py
-│   │   └── agente_trafego.py
-│   ├── templates/         # Interfaces HTML do SOC Command Center (Dark Mode)
-│   ├── app.py             # Painel Web Flask e Endpoints de Controle
-│   ├── crypto_utils.py    # Criptografia de senhas salvas (Fernet)
-│   ├── engine.py          # Motor orquestrador do SOAR e varredura ativa
-│   └── ssh_utils.py       # Utilitários de comunicação SSH e sudo
-├── .env                   # Configuração de chaves e credenciais
-└── requirements.txt       # Dependências atualizadas (Groq, Flask, Paramiko, etc.)
-
+│   │   └── agente_trafego.py      # órfão, não integrado
+│   ├── app.py                 # Painel Web Flask
+│   ├── engine.py              # Motor multi-servidor
+│   ├── groq_client.py         # Cliente Groq compartilhado (retry/backoff)
+│   ├── regras_deteccao.py     # Tier 0 — severidade determinística
+│   ├── pentest_scanner.py     # Tier 0.5 — hardening/backup somente leitura
+│   ├── crypto_utils.py        # Criptografia Fernet
+│   └── ssh_utils.py           # Execução SSH segura + validação de IP
+├── .env.example
+└── requirements.txt
 ```
 
 ---
 
 ## Pré-requisitos
 
-* **Sistema Operacional:** Linux, Windows ou macOS.
-* **Python:** Versão 3.10 ou superior.
-* **Groq API Key:** Chave de API gerada no console do Groq.
-* **Servidor Alvo Linux:** Ubuntu Server com SSH ativo e permissão de execução para o utilitário `ufw`.
+- **Sistema operacional do host VanguardSec:** Linux, Windows ou macOS (é uma aplicação Python).
+- **Servidor(es) monitorado(s):** Ubuntu Linux com SSH ativo e usuário com permissão de `sudo` pra `ufw`.
+- **Python:** 3.10+
+- **Chave de API do Groq:** gerada em [console.groq.com/keys](https://console.groq.com/keys)
+- **Nmap** instalado no host que roda o VanguardSec, se for usar o `agente_nmap.py`.
 
 ---
 
@@ -135,67 +152,83 @@ VanguardSec-AI/
 ### 1. Clonar o repositório e criar o ambiente virtual
 
 ```bash
-git clone [https://github.com/DavidNonato23/vanguardsec-ai.git](https://github.com/DavidNonato23/vanguardsec-ai.git)
+git clone https://github.com/DavidNonato23/vanguardsec-ai.git
 cd vanguardsec-ai
 
-# Criar ambiente virtual
 python -m venv venv
 
-# Ativar no Windows (PowerShell)
+# Windows (PowerShell)
 .\venv\Scripts\activate
 
-# Ativar no Linux/macOS
+# Linux/macOS
 source venv/bin/activate
-
 ```
 
 ### 2. Instalar as dependências
 
 ```bash
 pip install -r requirements.txt
-
 ```
 
-### 3. Configurar o arquivo .env
+### 3. Configurar o `.env`
 
-Crie ou edite o arquivo `.env` na raiz do projeto com as credenciais do ambiente:
+Copie `.env.example` para `.env` na raiz do projeto e preencha:
 
 ```env
-# --- Provedor de IA (Groq API) ---
-GROQ_API_KEY=gsk_SEU_TOKEN_AQUI_GROQ
+# --- Groq (API oficial) ---
+GROQ_API_KEY=gsk_seu_token_aqui
+GROQ_MODEL=openai/gpt-oss-20b
 
-# --- Automações e Segurança ---
+# --- Automação ---
 AUTO_REMEDIATION=true
 ACTIVE_DEFENSE=true
 
-# --- Credenciais do Painel Web (app.py) ---
+# --- Painel Web ---
 VANGUARD_ADMIN_USER=admin
-VANGUARD_ADMIN_PASSWORD=sua_senha_admin_aqui
+VANGUARD_ADMIN_PASSWORD=troque_por_uma_senha_forte
 
-# --- Criptografia SQLite ---
-VANGUARD_ENCRYPTION_KEY=SuaChaveFernetGeradaAqui
-
+# --- Criptografia das senhas de servidor no banco ---
+VANGUARD_ENCRYPTION_KEY=gere_com_o_comando_abaixo
 ```
+
+Gere a chave de criptografia com:
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+Sem essas variáveis preenchidas, o sistema **recusa iniciar** de propósito — é uma proteção contra rodar com configuração insegura.
+
+### 4. Cadastrar servidores
+
+Servidores são adicionados pelo próprio painel web (`/servidores`), não pelo `.env` — cada um com IP, usuário e senha SSH próprios, salvos criptografados.
 
 ---
 
 ## Como Executar
 
-* **Iniciando o Painel Web Command Center (Flask em http://localhost:5000):**
-
 ```bash
 python src/app.py
-
 ```
+Acesse `http://localhost:5000` (peça o usuário/senha que você configurou no `.env`).
+
+Pra rodar o motor de varredura contínua em paralelo:
+```bash
+python src/engine.py
+```
+
+---
+
+## Roadmap (planejado, não implementado ainda)
+
+- Suporte a Windows Server via WinRM
+- Integração real do `agente_trafego.py` ao pipeline automático
+- Verificação de host key SSH (substituir `AutoAddPolicy`)
+- Auditoria de ações do SOAR com atribuição de usuário
+- Autenticação SSH por chave, como alternativa à senha
 
 ---
 
 ## Autor e Desenvolvedor
 
 **Idealização, Arquitetura & Engenharia:** David Nonato
-
-* **GitHub:** [@DavidNonato23](https://github.com/DavidNonato23)
-
-```
-
-```
+- **GitHub:** [@DavidNonato23](https://github.com/DavidNonato23)
