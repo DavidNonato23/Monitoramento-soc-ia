@@ -1,11 +1,15 @@
-# 🏗️ Arquitetura de Software & Desenho Modular
+# 🛡️ VanguardSec AI — Visão Geral & Proposta de Valor
 
-## 1. Princípios de Engenharia
-A solução segue a **Separação de Responsabilidades (SoC)** com **Desacoplamento Fraco (Loose Coupling)**:
-* **`src/telemetry`:** Ingestão limpa e parsing de logs SSH/Paramiko.
-* **`src/ai`:** Orquestração de modelos de IA de forma agnóstica (OpenAI / Ollama).
-* **`src/soar`:** Execução isolada de regras de firewall (`UFW`) e *Kill Switch*.
-* **`src/database`:** Persistência em SQLite e exportação para analytics (CSV).
+## O Que É o VanguardSec AI?
+O **VanguardSec AI** é uma plataforma autônoma de *SecOps*, *Threat Intelligence* e resposta a incidentes de nível corporativo. Ele opera de forma integrada utilizando inteligência artificial local (**Ollama** com o modelo `qwen2.5:3b`)[cite: 2, 5], garantindo total soberania e privacidade dos dados corporativos sem envio de informações para APIs de terceiros.
 
-## 2. Abstração de Provedor de IA (LLM Provider Agnostic)
-A engine alterna dinamicamente entre serviços na nuvem (Azure OpenAI / OpenAI) e execução local (Ollama/Qwen) com base em variáveis de ambiente (`LLM_PROVIDER`), garantindo flexibilidade para clientes Enterprise.
+## O Problema Resolvido
+Operações de segurança tradicionais sofrem com gargalos críticos:
+* **Fatiga de Alertas (*Alert Fatigue*):** Analistas perdem tempo triando falsos positivos repetitivos.
+* **MTTR Elevado:** O tempo entre a detecção e o bloqueio de uma ameaça costuma ser lento.
+* **Complexidade Regulatória:** Cruzar logs de segurança com normas como **LGPD (Art. 46)** e **ISO 27001** manualmente é ineficiente.
+
+## Nossos Diferenciais
+* **Abordagem *Agentless*:** Conexão direta e segura via SSH (Paramiko) para Linux e WinRM para Windows, sem poluir os servidores monitorados com agentes pesados[cite: 1, 2].
+* **Governança de Temperatura Determinística:** Uso de temperatura `0.0` em módulos críticos de remediação para evitar alucinações ao gerar códigos de infraestrutura.
+* **Automação Completa via ChatOps e SOAR:** Resposta a incidentes automatizada com 1 clique pelo Telegram ou pelo painel web[cite: 1, 2].

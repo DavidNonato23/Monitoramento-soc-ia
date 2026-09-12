@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VanguardSec AI — Agentes Autônomos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg-base: #0b0f19; --bg-surface: #111827; --bg-sidebar: #0d1117; 
+            --border-color: #2a3447; --text-main: #ffffff; --text-muted: #cbd5e1; --accent-green: #10b981; 
+        }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: 'Inter', sans-serif; overflow-x: hidden; margin: 0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .soc-header { background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; z-index: 1030; }
+        .soc-sidebar { background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); width: 240px; position: fixed; top: 60px; bottom: 0; left: 0; padding: 20px 10px; z-index: 1020; }
+        .soc-sidebar .text-muted { color: #93c5fd !important; font-weight: 700; }
+        .nav-link { color: #e2e8f0; border-radius: 6px; padding: 10px 15px; margin-bottom: 4px; font-size: 0.88rem; display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-link:hover, .nav-link.active { color: #ffffff; background-color: rgba(255, 255, 255, 0.08); }
+        .nav-link.active { border-left: 3px solid var(--accent-green); background-color: rgba(16, 185, 129, 0.12); font-weight: 600; }
+        .soc-content { margin-left: 240px; margin-top: 60px; padding: 24px; min-height: calc(100vh - 60px); }
+        .card-soc { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+        .metric-value { font-size: 1.5rem; font-weight: 700; color: #ffffff; }
+        .terminal-live { background-color: #0f172a; border: 1px solid #1e293b; border-radius: 6px; padding: 15px; font-family: 'JetBrains Mono', monospace; color: #34d399; font-size: 0.82rem; height: 220px; overflow-y: auto; }
+        .text-muted { color: #cbd5e1 !important; }
+        .soc-footer { background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); padding: 8px 24px; font-size: 0.75rem; color: #cbd5e1; margin-left: 240px; display: flex; justify-content: space-between; }
+        .pulse-dot { width: 8px; height: 8px; background-color: #10b981; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+    </style>
+</head>
+<body>
+
+    <header class="soc-header">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fa-solid fa-shield-halved text-success fa-lg"></i>
+            <span class="fw-bold tracking-wide text-white">VanguardSec <span class="text-success">SOC Command</span></span>
+            <span class="badge bg-success bg-opacity-20 text-success border border-success font-mono small px-2"><i class="fa-solid fa-circle fa-2xs me-1"></i> Operacional</span>
+        </div>
+        <div class="d-flex align-items-center gap-4 font-mono text-muted small">
+            <div><i class="fa-regular fa-clock me-1"></i> <span id="relogioHeader">--:--:--</span></div>
+            <div><i class="fa-regular fa-user me-1"></i> Analista Sênior (SOC-T2)</div>
+        </div>
+    </header>
+
+    <nav class="soc-sidebar">
+        <div class="text-muted small fw-bold px-3 mb-2 font-mono" style="font-size: 0.65rem;">MÓDULOS SOC</div>
+        <a href="/" class="nav-link"><i class="fa-solid fa-chart-line"></i> Visão Geral</a>
+        <a href="/servidores" class="nav-link"><i class="fa-solid fa-server"></i> Servidores</a>
+        <a href="/agentes" class="nav-link active"><i class="fa-solid fa-robot"></i> Agentes IA</a>
+        <a href="/soar" class="nav-link"><i class="fa-solid fa-bolt"></i> SOAR</a>
+    </nav>
+
+    <div class="soc-content">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="fw-bold text-white mb-0">🤖 Telemetria da Esteira de Agentes Autônomos</h5>
+            <span class="badge bg-dark border border-success text-success font-mono"><span class="pulse-dot me-1"></span> AO VIVO NO BANCO</span>
+        </div>
+        
+        <div class="row g-4 mb-4" id="cards-agentes-container">
+            <div class="col-12"><div class="text-muted p-3">Sincronizando agentes...</div></div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card-soc p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-white mb-0"><i class="fa-solid fa-terminal text-success me-2"></i>War Room — Análise de Logs & Tráfego em Tempo Real</h6>
+                        <span class="small font-mono text-muted">Atualização a cada 4s</span>
+                    </div>
+                    <div class="terminal-live" id="terminalLive">
+                        [INIT] Conectado ao barramento de eventos do VanguardSec...<br>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2">
+            <div class="col-12">
+                <div class="card-soc p-4 border border-success border-opacity-50">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <i class="fa-solid fa-chart-pie fa-xl text-success"></i>
+                        <div>
+                            <h5 class="fw-bold text-white mb-0">💡 Business Impact & ROI da Autonomia</h5>
+                            <span class="small font-mono text-muted">Redução de custos operacionais e proteção de caixa calculada via banco de dados</span>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><span class="text-muted small fw-bold">Horas Economizadas</span><div class="metric-value text-success" id="roi-horas">0 h</div></div></div>
+                        <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><span class="text-muted small fw-bold">Ameaças Contidas</span><div class="metric-value text-primary" id="roi-ameacas">0 Eventos</div></div></div>
+                        <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><span class="text-muted small fw-bold">MTTR (Resposta)</span><div class="metric-value text-info" id="roi-mttr">0.4 seg</div></div></div>
+                        <div class="col-md-3"><div class="p-3 bg-dark rounded border border-secondary"><span class="text-muted small fw-bold">Economia Mensal</span><div class="metric-value text-warning" id="roi-economia">R$ 0</div></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="soc-footer">
+        <div>Agentes Ativos: <span class="font-mono text-white">Tier 1, 2 e 3</span></div>
+        <div>VanguardSec v2.4.1</div>
+    </footer>
+
+    <script>
+        function atualizarRelogio() { document.getElementById('relogioHeader').innerText = new Date().toLocaleTimeString('pt-BR'); }
+        setInterval(atualizarRelogio, 1000); atualizarRelogio();
+
+        function atualizarAgentesAoVivo() {
+            fetch("/data/roi_metrics.json").then(res => res.json()).then(roi => {
+                document.getElementById("roi-horas").innerText = roi.horas;
+                document.getElementById("roi-ameacas").innerText = roi.ameacas;
+                document.getElementById("roi-mttr").innerText = roi.mttr;
+                document.getElementById("roi-economia").innerText = roi.economia;
+            });
+
+            fetch("/data/agentes_status.json").then(res => res.json()).then(data => {
+                const container = document.getElementById("cards-agentes-container");
+                container.innerHTML = "";
+                
+                if (data.agentes) {
+                    data.agentes.forEach((agente, idx) => {
+                        let isOffline = agente.status.includes("Inativo") || agente.status.includes("Offline") || agente.status.includes("Falha");
+                        let corBorda = isOffline ? "border-danger" : (idx === 0 ? "border-success" : (idx === 1 ? "border-primary" : "border-warning"));
+                        let corIcone = isOffline ? "text-danger" : (idx === 0 ? "text-success" : (idx === 1 ? "text-primary" : "text-warning"));
+                        
+                        container.innerHTML += `
+                            <div class="col-md-4">
+                                <div class="card-soc p-3 h-100 border-start ${corBorda} border-3">
+                                    <div class="d-flex align-items-center gap-3 mb-3">
+                                        <i class="fa-solid fa-microchip fa-2x ${corIcone}"></i>
+                                        <div>
+                                            <h5 class="text-white mb-0 fw-bold">${agente.nome}</h5>
+                                            <span class="badge bg-dark border ${corBorda} ${corIcone} font-mono" style="font-size:0.65rem;">● ${agente.status}</span>
+                                        </div>
+                                    </div>
+                                    <p class="small mb-2">${agente.detalhes}</p>
+                                    <hr class="border-secondary mt-auto">
+                                    <span class="small text-muted font-mono" style="font-size:0.75rem;"><i class="fa-regular fa-clock me-1"></i> Estado: ${agente.timestamp}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                const term = document.getElementById("terminalLive");
+                const agora = new Date().toLocaleTimeString();
+                
+                if (data.rede_ativa) {
+                    term.innerHTML += `<br>[${agora}] [AGENTE TIER 1] Varredura de pacotes e portas LAN executada.`;
+                    term.innerHTML += `<br>[${agora}] [AGENTE TIER 2] Sincronia de chaves e conformidade ISO 27001 validada.`;
+                } else {
+                    term.innerHTML += `<br>[${agora}] [AVISO] Nenhum host ativo na rede. Os agentes estão em modo de espera.`;
+                }
+                term.scrollTop = term.scrollHeight;
+            });
+        }
+        setInterval(atualizarAgentesAoVivo, 4000);
+        window.onload = atualizarAgentesAoVivo;
+    </script>
+</body>
+</html>

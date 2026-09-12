@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VanguardSec AI — Visão Geral SOC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        :root { 
+            --bg-base: #0b0f19; 
+            --bg-surface: #111827; 
+            --bg-sidebar: #0d1117; 
+            --border-color: #2a3447; 
+            --text-main: #ffffff; 
+            --text-muted: #cbd5e1; 
+            --accent-green: #10b981; 
+            --accent-yellow: #f59e0b; 
+            --accent-red: #ef4444; 
+            --accent-blue: #3b82f6; 
+        }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: 'Inter', sans-serif; overflow-x: hidden; margin: 0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .soc-header { background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; z-index: 1030; }
+        .soc-sidebar { background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); width: 240px; position: fixed; top: 60px; bottom: 0; left: 0; padding: 20px 10px; z-index: 1020; }
+        .soc-sidebar .text-muted { color: #93c5fd !important; font-weight: 700; }
+        .nav-link { color: #e2e8f0; border-radius: 6px; padding: 10px 15px; margin-bottom: 4px; font-size: 0.88rem; display: flex; align-items: center; gap: 12px; text-decoration: none; transition: all 0.2s; }
+        .nav-link:hover, .nav-link.active { color: #ffffff; background-color: rgba(255, 255, 255, 0.08); }
+        .nav-link.active { border-left: 3px solid var(--accent-green); background-color: rgba(16, 185, 129, 0.12); font-weight: 600; }
+        .soc-content { margin-left: 240px; margin-top: 60px; padding: 24px; min-height: calc(100vh - 60px); }
+        .card-soc { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+        .metric-title { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: #93c5fd; font-weight: 700; }
+        .metric-val { font-size: 1.5rem; font-weight: 700; color: #ffffff; }
+        .badge-status { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .status-online { background-color: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .table-soc { font-size: 0.82rem; color: #ffffff; margin-bottom: 0; background-color: var(--bg-surface); }
+        .table-soc th { background-color: rgba(255, 255, 255, 0.05); color: #e2e8f0; font-weight: 700; border-bottom: 1px solid var(--border-color); font-size: 0.72rem; text-transform: uppercase; }
+        .table-soc td { border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: middle; padding: 8px 12px; color: #f1f5f9; }
+        .cisa-item { background: #0f172a; border: 1px solid var(--border-color); border-left: 3px solid var(--accent-yellow); border-radius: 4px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.78rem; color: #f1f5f9; }
+        .text-muted { color: #cbd5e1 !important; }
+        .soc-footer { background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); padding: 8px 24px; font-size: 0.75rem; color: #cbd5e1; margin-left: 240px; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <header class="soc-header">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fa-solid fa-shield-halved text-success fa-lg"></i>
+            <span class="fw-bold tracking-wide text-white">VanguardSec <span class="text-success">SOC Command</span></span>
+            <span class="badge-status status-online ms-2"><i class="fa-solid fa-circle fa-2xs me-1"></i> Operacional</span>
+        </div>
+        <div class="d-flex align-items-center gap-4 font-mono text-muted small">
+            <div><i class="fa-regular fa-clock me-1"></i> <span id="relogioHeader">--:--:--</span></div>
+            <div><i class="fa-regular fa-user me-1"></i> Analista Sênior (SOC-T2)</div>
+        </div>
+    </header>
+
+    <nav class="soc-sidebar">
+        <div class="text-muted small fw-bold px-3 mb-2 font-mono" style="font-size: 0.65rem;">MÓDULOS SOC</div>
+        <a href="/" class="nav-link active"><i class="fa-solid fa-chart-line"></i> Visão Geral</a>
+        <a href="/servidores" class="nav-link"><i class="fa-solid fa-server"></i> Servidores</a>
+        <a href="/agentes" class="nav-link"><i class="fa-solid fa-robot"></i> Agentes IA</a>
+        <a href="/soar" class="nav-link"><i class="fa-solid fa-bolt"></i> SOAR</a>
+    </nav>
+
+    <div class="soc-content">
+        <div class="row g-3 mb-4">
+            <div class="col-xl-3 col-md-6"><div class="card-soc"><div class="metric-title">Amostras Coletadas</div><div class="metric-val" id="kpi-total">0</div></div></div>
+            <div class="col-xl-3 col-md-6"><div class="card-soc"><div class="metric-title">Laudos Processados</div><div class="metric-val text-primary" id="kpi-relatorios">0</div></div></div>
+            <div class="col-xl-3 col-md-6"><div class="card-soc"><div class="metric-title">Anomalias / Invasões</div><div class="metric-val text-danger" id="kpi-ameacas">0</div></div></div>
+            <div class="col-xl-3 col-md-6"><div class="card-soc"><div class="metric-title">Mitigação SOAR</div><div class="metric-val text-success" id="kpi-soar">0%</div></div></div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-lg-6"><div class="card-soc h-100"><h6 class="fw-bold mb-2 text-white small">Tendência Temporal de Incidentes</h6><div style="height:210px;"><canvas id="chartEvolucaoTemporal"></canvas></div></div></div>
+            <div class="col-lg-6"><div class="card-soc h-100"><h6 class="fw-bold mb-2 text-white small">Distribuição por Vetor de Ataque</h6><div style="height:210px;"><canvas id="chartTopVetores"></canvas></div></div></div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="card-soc">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-white mb-0 small">Histórico de Incidentes e Eventos do Perímetro</h6>
+                        <button class="btn btn-sm btn-outline-danger py-0 px-2 font-mono" style="font-size: 0.75rem;" onclick="limparHistoricoDB()"><i class="fa-solid fa-trash-can me-1"></i> Limpar Histórico</button>
+                    </div>
+                    <div class="table-responsive mt-2" style="max-height: 250px; overflow-y: auto;">
+                        <table class="table table-soc align-middle">
+                            <thead><tr><th>Timestamp</th><th>Severidade</th><th>Evento</th><th>IP Origem</th><th>Mitigação SOAR</th></tr></thead>
+                            <tbody id="tabela-bruta" class="font-mono"><tr><td colspan="5" class="text-center py-3 text-muted">Carregando logs...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card-soc h-100">
+                    <h6 class="fw-bold mb-2 text-white small">Threat Intel Feed Dinâmico</h6>
+                    <div class="font-mono" id="feed-global"><div class="text-muted small">Carregando...</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="soc-footer">
+        <div>Última Sincronização: <span class="font-mono text-white">Tempo real</span></div>
+        <div>Versão do Agente SOC: <span class="font-mono text-white">v2.4.1-enterprise</span></div>
+    </footer>
+
+    <script>
+        function atualizarRelogio() { document.getElementById('relogioHeader').innerText = new Date().toLocaleTimeString('pt-BR'); }
+        setInterval(atualizarRelogio, 1000); atualizarRelogio();
+
+        let chartEvolucao = null, chartVetores = null;
+        function limparHistoricoDB() {
+            if (confirm("Deseja realmente apagar todo o histórico de incidentes e logs?")) {
+                fetch("/limpar-historico", { method: "POST" }).then(res => res.json()).then(data => { if (data.status === "sucesso") location.reload(); });
+            }
+        }
+        function carregarDadosGerais() {
+            fetch("/data/threat_intel.json").then(res => res.json()).then(intel => {
+                document.getElementById("feed-global").innerHTML = intel.feed_cisa.map(i => `<div class="cisa-item"><span class="text-primary">${i.vendedor}</span><br><small class="text-muted">${i.nome}</small></div>`).join('');
+                Papa.parse("/data/vanguard_powerbi_data.csv", { download: true, header: true, skipEmptyLines: true, complete: function(res) { if (res.data) processarAnalytics(res.data); } });
+            });
+        }
+        function processarAnalytics(data) {
+            const validos = data.filter(i => i.timestamp);
+            document.getElementById("kpi-total").innerText = validos.length;
+            document.getElementById("kpi-relatorios").innerText = validos.length;
+            let ataques = 0, bloqueios = 0; const tipos = {}, tbody = document.getElementById("tabela-bruta"); tbody.innerHTML = "";
+            if (validos.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="text-center py-3 text-muted">Nenhum evento registrado.</td></tr>`; }
+            validos.forEach(item => {
+                const sev = (item.severidade || "INFO").toUpperCase();
+                if (["ALTO", "CRITICO", "MEDIO"].includes(sev)) ataques++;
+                if (item.acao_soar_gerada && !item.acao_soar_gerada.includes("Monitorada")) bloqueios++;
+                tipos[item.tipo_evento || "Geral"] = (tipos[item.tipo_evento || "Geral"] || 0) + 1;
+                tbody.innerHTML += `<tr><td>${item.timestamp}</td><td><span class="badge bg-danger">${sev}</span></td><td>${item.tipo_evento}</td><td><code>${item.ip_origem}</code></td><td class="text-success">${item.acao_soar_gerada || 'Monitorado'}</td></tr>`;
+            });
+            document.getElementById("kpi-ameacas").innerText = ataques;
+            document.getElementById("kpi-soar").innerText = validos.length > 0 ? ((bloqueios / validos.length) * 100).toFixed(1) + "%" : "0%";
+
+            if (chartEvolucao) chartEvolucao.destroy();
+            chartEvolucao = new Chart(document.getElementById('chartEvolucaoTemporal'), {
+                type: 'line', data: { labels: validos.slice(0, 8).map(l => l.timestamp), datasets: [{ data: validos.slice(0, 8).map((_, i) => i + 1), borderColor: '#10b981', fill: true, backgroundColor: 'rgba(16,185,129,0.05)' }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+            if (chartVetores) chartVetores.destroy();
+            chartVetores = new Chart(document.getElementById('chartTopVetores'), {
+                type: 'bar', data: { labels: Object.keys(tipos), datasets: [{ data: Object.values(tipos), backgroundColor: '#ef4444' }] },
+                options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
+        window.onload = carregarDadosGerais;
+    </script>
+</body>
+</html>

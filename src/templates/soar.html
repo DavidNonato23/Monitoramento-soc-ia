@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VanguardSec AI — SOAR & Resposta a Incidentes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg-base: #0b0f19; --bg-surface: #111827; --bg-sidebar: #0d1117; 
+            --border-color: #2a3447; --text-main: #ffffff; --text-muted: #cbd5e1; --accent-green: #10b981; 
+        }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: 'Inter', sans-serif; overflow-x: hidden; margin: 0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .soc-header { background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; z-index: 1030; }
+        .soc-sidebar { background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); width: 240px; position: fixed; top: 60px; bottom: 0; left: 0; padding: 20px 10px; z-index: 1020; }
+        .soc-sidebar .text-muted { color: #93c5fd !important; font-weight: 700; }
+        .nav-link { color: #e2e8f0; border-radius: 6px; padding: 10px 15px; margin-bottom: 4px; font-size: 0.88rem; display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-link:hover, .nav-link.active { color: #ffffff; background-color: rgba(255, 255, 255, 0.08); }
+        .nav-link.active { border-left: 3px solid var(--accent-green); background-color: rgba(16, 185, 129, 0.12); font-weight: 600; }
+        .soc-content { margin-left: 240px; margin-top: 60px; padding: 24px; min-height: calc(100vh - 60px); }
+        .card-soc { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+        .text-muted { color: #cbd5e1 !important; }
+        .soc-footer { background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); padding: 8px 24px; font-size: 0.75rem; color: #cbd5e1; margin-left: 240px; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <header class="soc-header">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fa-solid fa-shield-halved text-success fa-lg"></i>
+            <span class="fw-bold tracking-wide text-white">VanguardSec <span class="text-success">SOC Command</span></span>
+            <span class="badge bg-success bg-opacity-20 text-success border border-success font-mono small px-2"><i class="fa-solid fa-circle fa-2xs me-1"></i> SOAR Ativo</span>
+        </div>
+        <div class="d-flex align-items-center gap-4 font-mono text-muted small">
+            <div><i class="fa-regular fa-clock me-1"></i> <span id="relogioHeader">--:--:--</span></div>
+            <div><i class="fa-regular fa-user me-1"></i> Analista Sênior (SOC-T2)</div>
+        </div>
+    </header>
+
+    <nav class="soc-sidebar">
+        <div class="text-muted small fw-bold px-3 mb-2 font-mono" style="font-size: 0.65rem;">MÓDULOS SOC</div>
+        <a href="/" class="nav-link"><i class="fa-solid fa-chart-line"></i> Visão Geral</a>
+        <a href="/servidores" class="nav-link"><i class="fa-solid fa-server"></i> Servidores</a>
+        <a href="/agentes" class="nav-link"><i class="fa-solid fa-robot"></i> Agentes IA</a>
+        <a href="/soar" class="nav-link active"><i class="fa-solid fa-bolt"></i> SOAR</a>
+    </nav>
+
+    <div class="soc-content">
+        <h4 class="fw-bold text-white mb-2">⚡ Central de Resposta SOAR (Orquestração & Defesa)</h4>
+        <p class="text-muted small mb-4">Motor de contenção automática de ameaças via regras de Firewall UFW e Kill Switch de sessões persistentes.</p>
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="card-soc p-4 h-100 border-start border-danger border-3">
+                    <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-fire text-danger me-2"></i>Contenção de Perímetro (UFW)</h5>
+                    <p class="text-muted small">O Agente Tier 3 monitora o limiar de reincidências de IPs hostis. Ao atingir o limite configurado, o IP é banido instantaneamente na primeira linha da regra do firewall UFW.</p>
+                    <hr class="border-secondary">
+                    <span class="small font-mono text-success">● Status do Motor SOAR: Escuta em tempo real ativada</span>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card-soc p-4 h-100 border-start border-warning border-3">
+                    <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-skull text-warning me-2"></i>Kill Switch de PIDs SSH</h5>
+                    <p class="text-muted small">Caso um invasor estabeleça uma conexão persistente ou realize força bruta com credenciais vazadas, o Kill Switch encerra o processo associado no sistema.</p>
+                    <hr class="border-secondary">
+                    <span class="small font-mono text-success">● MTTR Médio de Mitigação: 0.4 segundos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="soc-footer">
+        <div>Status SOAR: <span class="font-mono text-white">Protegido</span></div>
+        <div>VanguardSec v2.4.1</div>
+    </footer>
+
+    <script>
+        function atualizarRelogio() { document.getElementById('relogioHeader').innerText = new Date().toLocaleTimeString('pt-BR'); }
+        setInterval(atualizarRelogio, 1000); atualizarRelogio();
+    </script>
+</body>
+</html>

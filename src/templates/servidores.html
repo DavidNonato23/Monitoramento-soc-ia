@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VanguardSec AI — Frota de Servidores</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg-base: #0b0f19; --bg-surface: #111827; --bg-sidebar: #0d1117; 
+            --border-color: #2a3447; --text-main: #ffffff; --text-muted: #cbd5e1; --accent-green: #10b981; 
+        }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: 'Inter', sans-serif; overflow-x: hidden; margin: 0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .soc-header { background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; z-index: 1030; }
+        .soc-sidebar { background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); width: 240px; position: fixed; top: 60px; bottom: 0; left: 0; padding: 20px 10px; z-index: 1020; }
+        .soc-sidebar .text-muted { color: #93c5fd !important; font-weight: 700; }
+        .nav-link { color: #e2e8f0; border-radius: 6px; padding: 10px 15px; margin-bottom: 4px; font-size: 0.88rem; display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .nav-link:hover, .nav-link.active { color: #ffffff; background-color: rgba(255, 255, 255, 0.08); }
+        .nav-link.active { border-left: 3px solid var(--accent-green); background-color: rgba(16, 185, 129, 0.12); font-weight: 600; }
+        .soc-content { margin-left: 240px; margin-top: 60px; padding: 24px; min-height: calc(100vh - 60px); }
+        .card-soc { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+        
+        /* Correção definitiva para forçar a tabela em Dark Mode sem falhas */
+        .table-soc { font-size: 0.85rem; color: #ffffff !important; margin-bottom: 0; background-color: #111827 !important; }
+        .table-soc th { background-color: #1f2937 !important; color: #e2e8f0 !important; font-weight: 700; border-bottom: 1px solid var(--border-color); font-size: 0.72rem; text-transform: uppercase; }
+        .table-soc td { background-color: #111827 !important; border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important; vertical-align: middle; padding: 12px !important; color: #ffffff !important; }
+        .table-soc tr:hover td { background-color: #1f2937 !important; }
+
+        .badge-status { padding: 3px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+        .status-online { background-color: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); }
+        .status-offline { background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+        .text-muted { color: #cbd5e1 !important; }
+        .soc-footer { background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); padding: 8px 24px; font-size: 0.75rem; color: #cbd5e1; margin-left: 240px; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <header class="soc-header">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fa-solid fa-shield-halved text-success fa-lg"></i>
+            <span class="fw-bold tracking-wide text-white">VanguardSec <span class="text-success">SOC Command</span></span>
+            <span class="badge-status status-online ms-2"><i class="fa-solid fa-circle fa-2xs me-1"></i> Operacional</span>
+        </div>
+        <div class="d-flex align-items-center gap-4 font-mono text-muted small">
+            <div><i class="fa-regular fa-clock me-1"></i> <span id="relogioHeader">--:--:--</span></div>
+            <div><i class="fa-regular fa-user me-1"></i> Analista Sênior (SOC-T2)</div>
+        </div>
+    </header>
+
+    <nav class="soc-sidebar">
+        <div class="text-muted small fw-bold px-3 mb-2 font-mono" style="font-size: 0.65rem;">MÓDULOS SOC</div>
+        <a href="/" class="nav-link"><i class="fa-solid fa-chart-line"></i> Visão Geral</a>
+        <a href="/servidores" class="nav-link active"><i class="fa-solid fa-server"></i> Servidores</a>
+        <a href="/agentes" class="nav-link"><i class="fa-solid fa-robot"></i> Agentes IA</a>
+        <a href="/soar" class="nav-link"><i class="fa-solid fa-bolt"></i> SOAR</a>
+    </nav>
+
+    <div class="soc-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h4 class="fw-bold text-white mb-1">🖥️ Gestão da Frota de Servidores</h4>
+                <p class="text-muted small mb-0">Monitoramento de hosts e execução de comandos remotos via Paramiko SSH.</p>
+            </div>
+            <button class="btn btn-sm btn-success font-mono" data-bs-toggle="modal" data-bs-target="#modalAdicionar"><i class="fa-solid fa-plus me-1"></i> Novo Servidor</button>
+        </div>
+
+        <div class="card-soc mb-4">
+            <div class="table-responsive">
+                <table class="table table-soc align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nome do Host</th>
+                            <th>Endereço IP</th>
+                            <th>Porta SSH</th>
+                            <th>Usuário</th>
+                            <th>Função</th>
+                            <th>Status Rede</th>
+                            <th class="text-end">Ações / Console</th>
+                        </tr>
+                    </thead>
+                    <tbody class="font-mono">
+                        {% for srv in servidores %}
+                        <tr>
+                            <td class="fw-bold text-white"><i class="fa-solid fa-server text-success me-2"></i>{{ srv.nome }}</td>
+                            <td class="text-light">{{ srv.ip }}</td>
+                            <td class="text-light">{{ srv.porta }}</td>
+                            <td class="text-light">{{ srv.usuario }}</td>
+                            <td><span class="badge bg-dark border border-secondary text-light">{{ srv.funcao }}</span></td>
+                            <td>
+                                {% if srv.status == 'Online' %}
+                                    <span class="badge-status status-online">● Online</span>
+                                {% else %}
+                                    <span class="badge-status status-offline">● Offline</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <a href="/servidor/{{ srv.id }}" class="btn btn-sm btn-outline-success py-0 px-2 font-mono" style="font-size: 0.75rem;"><i class="fa-solid fa-terminal me-1"></i> Acessar Host</a>
+                                <form action="/excluir-servidor/{{ srv.id }}" method="POST" class="d-inline ms-1">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1" onclick="return confirm('Excluir este servidor?')"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">Nenhum servidor cadastrado na frota. Clique em "Novo Servidor" acima.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Adicionar Servidor -->
+    <div class="modal fade" id="modalAdicionar" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-dark border border-secondary text-white">
+                <div class="modal-header border-bottom border-secondary">
+                    <h5 class="modal-title fs-6 fw-bold"><i class="fa-solid fa-server text-success me-2"></i>Adicionar Servidor à Frota</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/adicionar-servidor" method="POST">
+                    <div class="modal-body font-mono small">
+                        <div class="mb-2"><label class="text-muted">Nome do Host</label><input type="text" name="nome" class="form-control bg-black text-white border-secondary form-control-sm" required placeholder="ex: web-prod"></div>
+                        <div class="mb-2"><label class="text-muted">Endereço IP</label><input type="text" name="ip" class="form-control bg-black text-white border-secondary form-control-sm" required placeholder="ex: 192.168.15.50"></div>
+                        <div class="row">
+                            <div class="col-6 mb-2"><label class="text-muted">Porta SSH</label><input type="number" name="porta" class="form-control bg-black text-white border-secondary form-control-sm" value="22" required></div>
+                            <div class="col-6 mb-2"><label class="text-muted">Usuário SSH</label><input type="text" name="usuario" class="form-control bg-black text-white border-secondary form-control-sm" value="ubuntu" required></div>
+                        </div>
+                        <div class="mb-2"><label class="text-muted">Senha de Acesso / Chave</label><input type="password" name="senha" class="form-control bg-black text-white border-secondary form-control-sm" required placeholder="Senha SSH"></div>
+                    </div>
+                    <div class="modal-footer border-top border-secondary">
+                        <button type="button" class="btn btn-sm btn-outline-secondary text-white" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-sm btn-success">Salvar e Conectar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="soc-footer">
+        <div>Frota Sincronizada</div>
+        <div>VanguardSec v2.4.1</div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function atualizarRelogio() { document.getElementById('relogioHeader').innerText = new Date().toLocaleTimeString('pt-BR'); }
+        setInterval(atualizarRelogio, 1000); atualizarRelogio();
+    </script>
+</body>
+</html>

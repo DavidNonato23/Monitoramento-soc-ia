@@ -1,41 +1,67 @@
 import os
 import json
 import logging
-import requests
+from groq_client import gerar_json
 
-PASTA_DATA = "./data/"
-ARQUIVO_CISA_KEV = os.path.join(PASTA_DATA, "cisa_kev.json")
-CISA_KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger("AgenteThreatIntel")
 
-def atualizar_feed_cisa_kev() -> dict:
+def executar_agente_threat_intel(indicadores: str) -> dict:
+    """
+    Executa a análise de Inteligência de Ameaças (Threat Intelligence Enrichment)
+    utilizando a API do Groq (openai/gpt-oss-20b) com temperatura estrita (0.0)
+    e garantia nativa de JSON.
+    """
+    instrucao_sistema = (
+        "Você é um Analista de Inteligência de Ameaças (Threat Intel) Sênior.\n"
+        "Analise o indicador ou artefato de comprometimento abaixo.\n"
+        "Retorne ESTRITAMENTE um objeto JSON válido, sem comentários ou texto adicional fora do bloco."
+    )
+
+    prompt = f"""
+    INDICADOR / ARTEFATO:
+    {indicadores}
+
+    SCHEMA DE SAÍDA:
+    {{
+        "indicador": "string",
+        "reputacao": "Malicioso | Suspeito | Limpo | Desconhecido",
+        "familia_malware": "string ou null",
+        "campanha_associada": "string ou null",
+        "nivel_confianca": "Alta | Media | Baixa"
+    }}
+    """
+
+    resposta_texto = "{}"
     try:
-        response = requests.get(CISA_KEV_URL, timeout=5)
-        if response.status_code == 200:
-            dados = response.json()
-            os.makedirs(PASTA_DATA, exist_ok=True)
-            with open(ARQUIVO_CISA_KEV, "w", encoding="utf-8") as f:
-                json.dump(dados, f, ensure_ascii=False, indent=2)
-            return dados
+        logger.info("Enviando indicador para análise de Threat Intelligence via Groq (openai/gpt-oss-20b)")
+
+        resposta_texto = gerar_json(instrucao_sistema, prompt, temperatura=0.0, max_tokens=300)
+        dados_estruturados = json.loads(resposta_texto)
+
+        logger.info("Análise de Threat Intelligence concluída com sucesso via Groq")
+        return dados_estruturados
+
+    except json.JSONDecodeError as je:
+        logger.error(f"Erro de decodificação JSON no Agente Threat Intel: {str(je)}")
+        return {
+            "erro_parser": "JSONDecodeError",
+            "detalhes": str(je),
+            "resposta_bruta": resposta_texto
+        }
     except Exception as e:
-        logging.warning(f"Falha ao conectar com o feed CISA KEV: {e}")
-
-    if os.path.exists(ARQUIVO_CISA_KEV):
-        try:
-            with open(ARQUIVO_CISA_KEV, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
-
-    return {"vulnerabilities": []}
+        logger.error(f"Falha crítica no Agente Threat Intel via Groq: {str(e)}")
+        return {
+            "erro_sistema": str(e)
+        }
 
 def gerar_estatisticas_globais() -> dict:
-    dados_cisa = atualizar_feed_cisa_kev()
-    vulnerabilidades = dados_cisa.get("vulnerabilities", [])
-    total_cisa = len(vulnerabilidades)
-    cves_recentes = [v.get("cveID") for v in vulnerabilidades[:5] if "cveID" in v]
-
+    """Retorna estatísticas globais de inteligência de ameaças para o ecossistema."""
     return {
-        "total_vulnerabilidades_cisa": total_cisa,
-        "amostra_cves_criticos": cves_recentes,
-        "status_feed": "ONLINE" if total_cisa > 0 else "OFFLINE / CACHE"
+        "status": "ativo",
+        "modulo": "Threat Intelligence",
+        "total_iocs_monitorados": 0
     }

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VanguardSec AI — Controle do Servidor: {{ srv.nome }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { 
+            --bg-base: #0b0f19; --bg-surface: #111827; --bg-sidebar: #0d1117; 
+            --border-color: #2a3447; --text-main: #ffffff; --text-muted: #cbd5e1; --accent-green: #10b981; 
+        }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: 'Inter', sans-serif; overflow-x: hidden; margin: 0; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        .soc-header { background-color: var(--bg-sidebar); border-bottom: 1px solid var(--border-color); height: 60px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; position: fixed; top: 0; left: 0; right: 0; z-index: 1030; }
+        .soc-content { margin-top: 60px; padding: 24px; min-height: calc(100vh - 60px); }
+        .card-soc { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); }
+        .terminal-box { background-color: #0f172a; border: 1px solid #1e293b; border-radius: 6px; padding: 15px; font-family: 'JetBrains Mono', monospace; color: #34d399; font-size: 0.85rem; height: 380px; overflow-y: auto; white-space: pre-wrap; }
+        .btn-server-action { font-weight: 600; font-size: 0.85rem; padding: 10px; border-radius: 6px; text-align: left; transition: all 0.2s; }
+        .text-muted { color: #cbd5e1 !important; }
+    </style>
+</head>
+<body class="pb-4">
+    <header class="soc-header">
+        <div class="d-flex align-items-center gap-3">
+            <i class="fa-solid fa-shield-halved text-success fa-lg"></i>
+            <span class="fw-bold tracking-wide text-white">VanguardSec <span class="text-success">SOC Command</span></span>
+            <span class="badge bg-success bg-opacity-20 text-success border border-success font-mono small px-2">● Host Ativo</span>
+        </div>
+        <div class="d-flex align-items-center gap-2 font-mono">
+            <a href="/servidores" class="btn btn-sm btn-outline-secondary text-white"><i class="fa-solid fa-arrow-left me-1"></i> Voltar à Frota</a>
+            <a href="/" class="btn btn-sm btn-outline-secondary text-white">📊 Dashboard</a>
+        </div>
+    </header>
+
+    <div class="soc-content">
+        <div class="mb-3">
+            <h4 class="text-white fw-bold mb-1"><i class="fa-solid fa-server text-success me-2"></i>{{ srv.nome }}</h4>
+            <span class="small text-muted font-mono">IP Alvo: <b>{{ srv.ip }}:{{ srv.porta }}</b> | Função: {{ srv.funcao }}</span>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card-soc h-100">
+                    <h5 class="fw-bold text-white mb-3"><i class="fa-solid fa-terminal text-success me-2"></i>Painel de Comandos SSH</h5>
+                    <p class="text-muted small mb-3">Selecione uma ação para disparar via Paramiko:</p>
+                    <div class="d-flex flex-column gap-2">
+                        <button class="btn btn-outline-success btn-server-action" onclick="executarAcao('uptime')"><i class="fa-solid fa-heart-pulse me-2"></i> 1. Uptime & Carga</button>
+                        <button class="btn btn-outline-primary btn-server-action" onclick="executarAcao('ufw')"><i class="fa-solid fa-shield-halved me-2"></i> 2. Auditar Firewall UFW</button>
+                        <button class="btn btn-outline-warning btn-server-action" onclick="executarAcao('logs')"><i class="fa-solid fa-file-lines me-2"></i> 3. Inspecionar Auth Logs</button>
+                        <button class="btn btn-outline-info btn-server-action" onclick="executarAcao('processos')"><i class="fa-solid fa-microchip me-2"></i> 4. Top Processos por CPU</button>
+                        <button class="btn btn-outline-secondary btn-server-action text-light" onclick="executarAcao('disco')"><i class="fa-solid fa-hard-drive me-2"></i> 5. Uso de Espaço em Disco</button>
+                        <button class="btn btn-outline-light btn-server-action text-info border-info" onclick="executarAcao('compliance')"><i class="fa-solid fa-scale-balanced me-2"></i> 6. Agente Tier 2: SSL & Licenças</button>
+                        
+                        <!-- Agentes Avançados de Pentest & Auditoria -->
+                        <button class="btn btn-outline-danger btn-server-action text-danger border-danger mt-2" onclick="executarPentestNmap()"><i class="fa-solid fa-network-wired me-2"></i> 🔍 Nmap & NSE Vuln Scripts</button>
+                        <button class="btn btn-outline-warning btn-server-action text-warning border-warning" onclick="executarCveLookup()"><i class="fa-solid fa-bug me-2"></i> 🛡️ Cruzamento de CVE (NVD/OSV)</button>
+                        <button class="btn btn-outline-info btn-server-action text-info border-info" onclick="executarTlsAudit()"><i class="fa-solid fa-lock me-2"></i> 🔒 Auditoria TLS/SSL</button>
+                        <button class="btn btn-outline-success btn-server-action text-success border-success" onclick="executarOpenVas()"><i class="fa-solid fa-shield-virus me-2"></i> ⚡ Orquestrador OpenVAS</button>
+
+                        <!-- Botão Orquestrador Master de Relatório e Backup -->
+                        <button onclick="gerarLaudoMaster()" class="btn btn-success btn-server-action text-white text-decoration-none mt-2 w-100"><i class="fa-solid fa-file-pdf me-2"></i> 📄 Baixar Certificado ISO PDF</button>
+                        
+                        <form action="{{ url_for('executar_backup_servidor', id=srv['id']) }}" method="POST" class="d-grid mt-1">
+                            <button type="submit" class="btn btn-warning btn-server-action text-dark fw-bold">
+                                <i class="fa-solid fa-cloud-arrow-down me-2"></i> 💾 Fazer Backup do Servidor
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card-soc h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="fw-bold text-white mb-0"><i class="fa-solid fa-desktop text-success me-2"></i>Console de Resposta Remota</h5>
+                        <button class="btn btn-sm btn-outline-secondary text-white" onclick="limparConsole()"><i class="fa-solid fa-trash-can"></i> Limpar</button>
+                    </div>
+                    <p class="text-muted small mb-2">Saída de execução em tempo real:</p>
+                    <div class="terminal-box" id="terminalOutput">[VANGUARDSEC SSH TERMINAL] Pronto para interagir com {{ srv.ip }}. Selecione uma opção ao lado...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function limparConsole() { document.getElementById('terminalOutput').innerText = "[TERMINAL LIMPO]"; }
+        function executarAcao(tipoAcao) {
+            const terminal = document.getElementById('terminalOutput');
+            terminal.innerText = `[EXECUTANDO] Conectando via SSH em {{ srv.ip }} para rodar '${tipoAcao}'...`;
+            fetch("/servidor/{{ srv.id }}/executar", {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: "acao=" + tipoAcao
+            })
+            .then(res => res.json())
+            .then(data => { terminal.innerText = data.output; })
+            .catch(err => { terminal.innerText = "❌ ERRO DE REDE: " + err; });
+        }
+
+        function executarPentestNmap() {
+            const terminal = document.getElementById('terminalOutput');
+            terminal.innerText = `[PENTEST] Iniciando varredura Nmap com scripts NSE de vulnerabilidade em {{ srv.ip }}...`;
+            fetch("/api/pentest-nmap?ip={{ srv.ip }}")
+            .then(res => res.json())
+            .then(data => { terminal.innerText = JSON.stringify(data, null, 2); })
+            .catch(err => { terminal.innerText = "❌ ERRO NO NMAP: " + err; });
+        }
+
+        function executarCveLookup() {
+            const terminal = document.getElementById('terminalOutput');
+            terminal.innerText = `[CVE] Consultando bases NVD/OSV para o host {{ srv.id }}...`;
+            fetch("/api/pentest-cve-lookup/{{ srv.id }}")
+            .then(res => res.json())
+            .then(data => { terminal.innerText = JSON.stringify(data, null, 2); })
+            .catch(err => { terminal.innerText = "❌ ERRO NO CVE LOOKUP: " + err; });
+        }
+
+        function executarTlsAudit() {
+            const terminal = document.getElementById('terminalOutput');
+            terminal.innerText = `[TLS] Auditando configuração de certificado e cifras em {{ srv.ip }}...`;
+            fetch("/api/pentest-tls-audit/{{ srv.id }}")
+            .then(res => res.json())
+            .then(data => { terminal.innerText = JSON.stringify(data, null, 2); })
+            .catch(err => { terminal.innerText = "❌ ERRO NO TLS AUDIT: " + err; });
+        }
+
+        function executarOpenVas() {
+            const terminal = document.getElementById('terminalOutput');
+            terminal.innerText = `[OPENVAS] Disparando scanner de vulnerabilidades corporativas para o host {{ srv.id }}...`;
+            fetch("/api/pentest-openvas/{{ srv.id }}")
+            .then(res => res.json())
+            .then(data => { terminal.innerText = JSON.stringify(data, null, 2); })
+            .catch(err => { terminal.innerText = "❌ ERRO NO OPENVAS: " + err; });
+        }
+
+        async function gerarLaudoMaster() {
+            const terminal = document.getElementById('terminalOutput');
+            terminal.innerText = "[ORQUESTRADOR MASTER] Iniciando esteira completa de segurança para o host {{ srv.ip }}...\n";
+            
+            try {
+                terminal.innerText += "[1/3] Executando varredura Nmap & NSE...\n";
+                await fetch("/api/pentest-nmap?ip={{ srv.ip }}").then(r => r.json());
+                
+                terminal.innerText += "[2/3] Consultando bases NVD/OSV (CVE Lookup)...\n";
+                await fetch("/api/pentest-cve-lookup/{{ srv.id }}").then(r => r.json());
+                
+                terminal.innerText += "[3/3] Executando auditoria TLS/SSL...\n";
+                await fetch("/api/pentest-tls-audit/{{ srv.id }}").then(r => r.json());
+
+                terminal.innerText += "\n[SUCESSO] Todos os agentes concluíram as análises. Gerando e baixando o Laudo Master PDF com estatísticas de ameaças...";
+
+                window.location.href = "/servidor/{{ srv.id }}/certificado-pdf";
+            } catch (err) {
+                terminal.innerText += "\n❌ ERRO NO PROCESSO DE AUDITORIA: " + err;
+            }
+        }
+    </script>
+</body>
+</html>

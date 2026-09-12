@@ -1,11 +1,8 @@
-markdown
-# 🔒 Conformidade LGPD (Lei Geral de Proteção de Dados)
+# 🔒 Adequação Normativa: LGPD & ISO 27001
 
-## 1. Enquadramento no Artigo 46
-O **VanguardSec AI** aplica medidas de segurança técnicas e administrativas aptas a proteger os dados pessoais de acessos não autorizados:
-* **Privacidade por Design (Data Minimization):** Apenas logs de rede e IPs de origem são processados. Nenhum dado sensível de usuário é mantido sem necessidade.
-* **Opção de Processamento Air-Gapped:** Quando executado via Ollama local, 0% dos logs trafegam pela internet, garantindo compliance total com políticas de privacidade corporativas.
+## O Papel do Tier 2 na Governança
+O módulo de compliance do VanguardSec AI atua diretamente sobre os requisitos da **Lei Geral de Proteção de Dados (LGPD - Artigo 46)**, que obriga a adoção de medidas de segurança, técnicas e administrativas aptas a proteger os dados pessoais de acessos não autorizados.
 
-## 2. Mapeamento de Controles ISO 27001
-* **Controle A.8.2 (Classificação da Informação):** Logs auditados e rotulados por nível de severidade.
-* **Controle A.12.6 (Gestão de Vulnerabilidades Técnicas):** Detecção autônoma de varreduras de porta e tentativas de invasão SSH.
+## Cruzamento com RAG Normativo
+* A engine lê dinamicamente os documentos normativos em PDF inseridos na pasta `./politicas/` (como diretrizes da ISO 27001 e manuais de incidentes)[cite: 3, 5].
+* Durante a triagem de um incidente (por exemplo, uma falha de autenticação SSH via senha em vez de chave criptográfica), a IA gera um parecer técnico detalhando o desvio normativo e sugerindo ações corretivas imediatas[cite: 7].

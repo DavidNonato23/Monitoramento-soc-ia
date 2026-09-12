@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Laboratório de Prompts - VanguardSec AI</title>
+    <style>
+        body { background-color: #0d1117; color: #c9d1d9; font-family: Arial, sans-serif; padding: 30px; }
+        .container { max-width: 700px; margin: auto; background: #161b22; padding: 25px; border-radius: 8px; border: 1px solid #30363d; }
+        textarea, input { width: 100%; background: #0d1117; color: #c9d1d9; border: 1px solid #30363d; padding: 10px; margin-top: 5px; margin-bottom: 15px; border-radius: 4px; box-sizing: border-box; }
+        button { background: #238636; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #2ea043; }
+        pre { background: #0d1117; padding: 15px; border-radius: 4px; border: 1px solid #30363d; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Laboratório de Testes de IA (VanguardSec)</h2>
+        <form action="/testar-e-salvar" method="POST">
+            <label>System Prompt (Persona e Regras):</label>
+            <textarea name="system" rows="3">Você é o Agente Tier 1 do VanguardSec AI. Responda estritamente com base nos dados fornecidos e indique a severidade.</textarea>
+            
+            <label>Prompt / Dado de Entrada (Ex: Log de Falha):</label>
+            <textarea name="prompt" rows="3">Failed password for root from 192.168.1.50 port 22</textarea>
+            
+            <button type="submit">Testar e Salvar em Texto</button>
+        </form>
+    </div>
+</body>
+</html>
