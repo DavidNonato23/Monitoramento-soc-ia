@@ -108,30 +108,60 @@ A análise em linguagem natural é feita via **Groq LPU API** (`openai/gpt-oss-2
 
 ```text
 VanguardSec-AI/
-├── data/                     # Banco SQLite (vanguard_sec.db)
+├── assets/
+│   └── logo_cliente.png
+├── data/
+│   ├── cisa_kev.json
+│   ├── threat_intel.json
+│   ├── vanguard_powerbi_data.csv
+│   └── vanguard_sec.db
+├── docs/
+│   ├── 01_comercial/
+│   ├── 02_arquitetura/
+│   ├── 03_operacional/
+│   ├── 04_compliance/
+│   └── diagramas/
 ├── outputs/
-│   ├── relatorios_pdf/
-│   └── lab_logs/
-├── politicas/                # Políticas internas da empresa (.txt/.md) lidas pelo Tier 2
+│   ├── backups/
+│   ├── lab_logs/
+│   └── relatorios_pdf/
+├── politicas/
+│   ├── norma_iso27001.pdf
+│   ├── playbook_incidentes.pdf
+│   └── politica_lgpd.pdf
+├── prompts/
+│   ├── teste_avançado_promts.py
+│   ├── tier1_soc.json
+│   ├── tier2_auditoria_servidor.json
+│   ├── tier2_compliance.json
+│   ├── tier3_soar.json
+│   └── tier4_certificate.json
+├── scripts/
+│   ├── init_db.py
+│   ├── run_tests.py
+│   └── setup.sh
 ├── src/
 │   ├── ai/
-│   │   ├── agente_auditor.py
-│   │   ├── agente_backup_disaster.py
-│   │   ├── agente_compliance.py
-│   │   ├── agente_cve_lookup.py
-│   │   ├── agente_nmap.py
-│   │   ├── agente_remediacao.py
-│   │   ├── agente_threat_intel.py
-│   │   ├── agente_tls_audit.py
-│   │   └── agente_trafego.py      # órfão, não integrado
-│   ├── app.py                 # Painel Web Flask
-│   ├── engine.py              # Motor multi-servidor
-│   ├── groq_client.py         # Cliente Groq compartilhado (retry/backoff)
-│   ├── regras_deteccao.py     # Tier 0 — severidade determinística
-│   ├── pentest_scanner.py     # Tier 0.5 — hardening/backup somente leitura
-│   ├── crypto_utils.py        # Criptografia Fernet
-│   └── ssh_utils.py           # Execução SSH segura + validação de IP
+│   ├── core/
+│   ├── database/
+│   ├── reports/
+│   ├── soar/
+│   ├── telemetry/
+│   ├── templates/
+│   ├── __init__.py
+│   ├── agente_tls_audit.py
+│   ├── app_backup.py
+│   ├── app.py
+│   ├── crypto_utils.py
+│   ├── database.py
+│   ├── engine.py
+│   └── ssh_utils.py
+├── tests/
+│   └── test_engine.py
 ├── .env.example
+├── .gitignore
+├── manual-vanguard.md
+├── README.md
 └── requirements.txt
 ```
 
