@@ -177,6 +177,11 @@ def pagina_servidores():
 def pagina_agentes():
     return render_template("agentes.html")
 
+@app.route("/dashboard-soc")
+@requer_autenticacao
+def dashboard_soc():
+    return render_template("dashboard_soc.html")
+
 @app.route("/soar")
 @requer_autenticacao
 def pagina_soar():

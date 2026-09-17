@@ -2,9 +2,6 @@ import os
 import json
 import logging
 import sys
-import os
-import sys
-import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from groq_client import gerar_json
 

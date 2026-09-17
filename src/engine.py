@@ -22,6 +22,10 @@ RAIZ_PROJETO = os.path.dirname(os.path.abspath(__file__))
 if RAIZ_PROJETO not in sys.path:
     sys.path.insert(0, RAIZ_PROJETO)
 
+PASTA_AGENTES = os.path.join(RAIZ_PROJETO, "ai")
+if PASTA_AGENTES not in sys.path:
+    sys.path.insert(0, PASTA_AGENTES)
+
 from ai.agente_auditor import executar_agente_auditor
 from ai.agente_compliance import executar_agente_compliance
 from ai.agente_remediacao import executar_agente_remediacao
