@@ -41,7 +41,7 @@ from ai.agente_backup_disaster import executar_auditoria_backup
 
 # Importação do Motor Orquestrador (src/engine.py)
 from engine import processar_esteira_completa
-from ssh_utils import executar_comando_sudo
+from ssh_utils import conectar_ssh_verificado, executar_comando_sudo, obter_fingerprint_host
 from crypto_utils import criptografar, descriptografar
 
 dotenv.load_dotenv(os.path.join(RAIZ_GERAL, '.env'))
@@ -122,6 +122,9 @@ def init_db():
             status TEXT
         )
     """)
+    colunas_servidores = {row[1] for row in cursor.execute("PRAGMA table_info(servidores)").fetchall()}
+    if "host_key_fingerprint" not in colunas_servidores:
+        cursor.execute("ALTER TABLE servidores ADD COLUMN host_key_fingerprint TEXT")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS agentes_logs (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -204,12 +207,13 @@ def adicionar_servidor():
     senha = request.form.get("senha")
 
     if nome and ip and senha:
+        fingerprint = obter_fingerprint_host(ip, int(porta))
         senha_cifrada = criptografar(senha)
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO servidores (nome, ip, porta, usuario, senha, funcao, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (nome, ip, int(porta), usuario, senha_cifrada, "Custom", "Online")
+            "INSERT INTO servidores (nome, ip, porta, usuario, senha, funcao, status, host_key_fingerprint) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (nome, ip, int(porta), usuario, senha_cifrada, "Custom", "Online", fingerprint)
         )
         conn.commit()
         conn.close()
@@ -256,14 +260,9 @@ def executar_acao_servidor(id):
     senha_real = descriptografar(srv['senha'])
 
     try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(
-            srv['ip'],
-            port=int(srv['porta']),
-            username=srv['usuario'],
-            password=senha_real,
-            timeout=5
+        ssh = conectar_ssh_verificado(
+            srv['ip'], int(srv['porta']), srv['usuario'], senha_real,
+            srv['host_key_fingerprint']
         )
 
         saida, erro = "", ""
@@ -330,9 +329,10 @@ def executar_backup_servidor(id):
     senha_real = descriptografar(srv['senha'])
     
     try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(srv['ip'], port=int(srv['porta']), username=srv['usuario'], password=senha_real, timeout=5)
+        ssh = conectar_ssh_verificado(
+            srv['ip'], int(srv['porta']), srv['usuario'], senha_real,
+            srv['host_key_fingerprint']
+        )
 
         nome_bkp = f"backup_{sanitizar_nome_arquivo(srv['nome'])}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.tar.gz"
         caminho_remoto = f"/tmp/{nome_bkp}"
@@ -394,9 +394,10 @@ def gerar_certificado_pdf(id):
     # 2. Executa coleta de Hardware, Temperatura, Licenças e UFW via SSH (Paramiko)
     hardware_info = {"cpu_temp": "Estável / Normal", "ram_uso": "N/A", "licencas": "Regular e Conforme", "ufw": "Ativo"}
     try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(srv['ip'], port=int(srv['porta']), username=srv['usuario'], password=senha_real, timeout=5)
+        ssh = conectar_ssh_verificado(
+            srv['ip'], int(srv['porta']), srv['usuario'], senha_real,
+            srv['host_key_fingerprint']
+        )
 
         # Temperatura da CPU
         _, stdout, _ = ssh.exec_command("cat /sys/class/thermal/thermal_zone*/temp 2>/dev/null || vcgencmd measure_temp 2>/dev/null || echo 'N/A'")
@@ -830,6 +831,54 @@ Data/Hora: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
     })
 
 # --- ENDPOINTS DE DADOS & MÉTRICAS ---
+
+def coletar_metricas_servidor(srv):
+    metricas = {"cpu": "N/D", "ram": "N/D", "disco": "N/D", "uptime": "N/D"}
+    try:
+        senha_real = descriptografar(srv["senha"])
+        ssh = conectar_ssh_verificado(
+            srv["ip"], int(srv["porta"]), srv["usuario"], senha_real,
+            srv["host_key_fingerprint"], timeout=3
+        )
+        comandos = {
+            "cpu": "awk '{print $1}' /proc/loadavg",
+            "ram": "free -m | awk '/Mem:/ {printf \"%s/%s MB\", $3, $2}'",
+            "disco": "df -P / | awk 'NR==2 {print $5}'",
+            "uptime": "uptime -p 2>/dev/null || uptime",
+        }
+        for chave, comando in comandos.items():
+            _, stdout, _ = ssh.exec_command(comando, timeout=3)
+            valor = stdout.read().decode("utf-8", errors="ignore").strip()
+            if valor:
+                metricas[chave] = valor
+        ssh.close()
+    except Exception as erro:
+        metricas["erro"] = str(erro)
+    return metricas
+
+
+@app.route("/data/servidores.json")
+@requer_autenticacao
+def get_servidores_data():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    servidores = conn.execute("SELECT * FROM servidores ORDER BY nome").fetchall()
+    conn.close()
+
+    dados = []
+    for srv in servidores:
+        status = checar_status_host(srv["ip"], srv["porta"])
+        item = {
+            "id": srv["id"],
+            "nome": srv["nome"],
+            "ip": srv["ip"],
+            "status": status,
+            "metricas": coletar_metricas_servidor(srv) if status == "Online" else {
+                "cpu": "N/D", "ram": "N/D", "disco": "N/D", "uptime": "Offline"
+            },
+        }
+        dados.append(item)
+    return jsonify({"servidores": dados})
 
 @app.route("/data/vanguard_powerbi_data.csv")
 @requer_autenticacao

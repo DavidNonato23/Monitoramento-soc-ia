@@ -262,6 +262,27 @@
             </div>
         </div>
 
+        <div class="row g-3 mb-4">
+            <div class="col-lg-12">
+                <div class="card-soc">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold text-white mb-0 small">Telemetria Real da Frota</h6>
+                        <span class="badge bg-dark border border-secondary font-mono small">SSH verificado</span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-soc align-middle">
+                            <thead>
+                                <tr><th>Host</th><th>IP</th><th>Status</th><th>CPU / Load</th><th>RAM</th><th>Disco</th><th>Uptime</th></tr>
+                            </thead>
+                            <tbody id="tabela-servidores" class="font-mono">
+                                <tr><td colspan="7" class="text-center py-3 text-muted">Carregando telemetria...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row g-3">
             <div class="col-lg-12">
                 <div class="card-soc h-100">
@@ -288,15 +309,17 @@
 
         async function carregarDadosGerais() {
             try {
-                const [roiRes, intelRes, agentesRes] = await Promise.all([
+                const [roiRes, intelRes, agentesRes, servidoresRes] = await Promise.all([
                     fetch("/data/roi_metrics.json"),
                     fetch("/data/threat_intel.json"),
-                    fetch("/data/agentes_status.json")
+                    fetch("/data/agentes_status.json"),
+                    fetch("/data/servidores.json")
                 ]);
 
                 const roi = await roiRes.json();
                 const intel = await intelRes.json();
                 const agentes = await agentesRes.json();
+                const servidores = await servidoresRes.json();
 
                 document.getElementById('kpi-horas').innerText = roi.horas || '0 h';
                 document.getElementById('kpi-ameacas').innerText = roi.ameacas || '0 Eventos';
@@ -324,6 +347,8 @@
                     feed.insertAdjacentHTML('beforeend', '<div class="mt-3"><div class="small text-white fw-bold mb-2">Agentes IA</div>' + agenteStatus + '</div>');
                 }
 
+                renderizarServidores(servidores.servidores || []);
+
                 Papa.parse("/data/vanguard_powerbi_data.csv", {
                     download: true,
                     header: true,
@@ -336,6 +361,27 @@
                 document.getElementById('feed-global').innerHTML = '<div class="text-muted small">Falha ao carregar os dados do backend.</div>';
                 document.getElementById('tabela-bruta').innerHTML = '<tr><td colspan="5" class="text-center py-3 text-muted">Não foi possível carregar os eventos do backend.</td></tr>';
             }
+        }
+
+        function renderizarServidores(servidores) {
+            const tbody = document.getElementById('tabela-servidores');
+            if (!servidores.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center py-3 text-muted">Nenhum servidor cadastrado.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = servidores.map(item => {
+                const metricas = item.metricas || {};
+                const statusClass = item.status === 'Online' ? 'status-online' : 'status-danger';
+                return `<tr>
+                    <td class="fw-bold text-white">${item.nome}</td>
+                    <td>${item.ip}</td>
+                    <td><span class="badge-status ${statusClass}">${item.status}</span></td>
+                    <td>${metricas.cpu || 'N/D'}</td>
+                    <td>${metricas.ram || 'N/D'}</td>
+                    <td>${metricas.disco || 'N/D'}</td>
+                    <td>${metricas.uptime || 'N/D'}</td>
+                </tr>`;
+            }).join('');
         }
 
         function processarAnalytics(data) {

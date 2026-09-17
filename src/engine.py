@@ -30,7 +30,8 @@ from ai.agente_auditor import executar_agente_auditor
 from ai.agente_compliance import executar_agente_compliance
 from ai.agente_remediacao import executar_agente_remediacao
 from ai.agente_threat_intel import executar_agente_threat_intel
-from ssh_utils import ip_valido, executar_comando_sudo
+from ssh_utils import conectar_ssh_verificado, ip_valido, executar_comando_sudo
+from soar.coletor_winrm import coletar_dados_windows
 
 dotenv.load_dotenv()
 
@@ -58,9 +59,11 @@ SSH_HOST = os.getenv("SSH_HOST")
 SSH_PORT = int(os.getenv("SSH_PORT", "22"))
 SSH_USER = os.getenv("SSH_USER")
 SSH_PASSWORD = os.getenv("SSH_PASSWORD")
+MONITORAMENTO_PROTOCOLO = os.getenv("MONITORAMENTO_PROTOCOLO", "ssh").lower()
 
 AUTO_REMEDIATION = os.getenv("AUTO_REMEDIATION", "true").lower() == "true"
 ACTIVE_DEFENSE = os.getenv("ACTIVE_DEFENSE", "true").lower() == "true"
+SSH_HOST_KEY_FINGERPRINT = os.getenv("SSH_HOST_KEY_FINGERPRINT")
 GERAR_PDF = os.getenv("GERAR_PDF", "true").lower() == "true"
 
 _ULTIMO_HASH_LOG = None
@@ -150,9 +153,9 @@ def aplicar_bloqueio_ufw_temporal(ip_atacante: str) -> str:
 
     try:
         host, porta, usuario, senha = obter_credenciais_ssh()
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(host, port=porta, username=usuario, password=senha, timeout=3)
+        ssh = conectar_ssh_verificado(
+            host, porta, usuario, senha, SSH_HOST_KEY_FINGERPRINT, timeout=3
+        )
         _, err = executar_comando_sudo(ssh, f"ufw insert 1 deny from {ip_atacante} to any", senha)
         ssh.close()
         if "Rule inserted" in err or "Rules updated" in err or not err.strip():
@@ -174,9 +177,9 @@ def derrubar_sessao_ssh_ativa(ip_atacante: str) -> str:
     comando_find = f"ps aux | grep 'sshd:.*@{ip_atacante}' | grep -v grep | awk '{{print $2}}'"
     try:
         host, porta, usuario, senha = obter_credenciais_ssh()
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(host, port=porta, username=usuario, password=senha, timeout=3)
+        ssh = conectar_ssh_verificado(
+            host, porta, usuario, senha, SSH_HOST_KEY_FINGERPRINT, timeout=3
+        )
         stdin, stdout, _ = ssh.exec_command(comando_find)
         pids = [p for p in stdout.read().decode('utf-8', errors='ignore').splitlines() if p.strip().isdigit()]
         if pids:
@@ -224,8 +227,28 @@ def coletar_logs_multi_servico() -> dict:
         logger.exception("Credenciais SSH ausentes — não é possível coletar logs.")
         return {"is_ataque": False, "log_raw": "", "ip": SSH_HOST or ""}
 
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    if MONITORAMENTO_PROTOCOLO == "winrm":
+        telemetria_windows = coletar_dados_windows(host, usuario, senha)
+        linhas_relevantes = [
+            linha for linha in telemetria_windows.splitlines()
+            if any(palavra in linha.lower() for palavra in ("failure", "failed", "audit failure"))
+        ]
+        log_windows = linhas_relevantes[-1].strip() if linhas_relevantes else ""
+        if log_windows:
+            return {
+                "origem": "Windows Security / WinRM",
+                "severidade": "ALTO",
+                "tipo": "Falha de autenticação Windows",
+                "ip": extrair_ip_do_log(log_windows, host),
+                "status": "ALERTA",
+                "log_raw": log_windows,
+                "is_ataque": True,
+            }
+        return {"is_ataque": False, "log_raw": "", "ip": host}
+
+    ssh = conectar_ssh_verificado(
+        host, porta, usuario, senha, SSH_HOST_KEY_FINGERPRINT, timeout=2
+    )
     try:
         ssh.connect(host, port=porta, username=usuario, password=senha, timeout=2)
         log_ssh, _ = executar_comando_sudo(
@@ -252,7 +275,7 @@ def consultar_geoip(ip: str) -> dict:
     if not ip or ip.startswith("192.168.") or ip.startswith("10.") or ip.startswith("127.0.0.1"):
         return {"pais": "Rede Privada", "cidade": "LAN", "provedor": "Interno"}
     try:
-        res = requests.get(f"http://ip-api.com/json/{ip}?fields=status,country,city,isp", timeout=2)
+        res = requests.get(f"https://ip-api.com/json/{ip}?fields=status,country,city,isp", timeout=2)
         if res.status_code == 200:
             dados = res.json()
             if dados.get("status") == "success":
@@ -310,7 +333,7 @@ def executar_ciclo_varredura() -> None:
     parecer_ia = str(resultado_esteira["tier1_soc"].get("acao_recomendada", "Análise executada."))
 
     resultado_soar = "Monitorado"
-    if severidade in ["ALTO", "CRITICA", "Alta", "Crítica"] and AUTO_REMEDIATION:
+    if ACTIVE_DEFENSE and severidade in ["ALTO", "CRITICA", "Alta", "Crítica"] and AUTO_REMEDIATION:
         res_kill = derrubar_sessao_ssh_ativa(ip_atacante)
         res_ufw = aplicar_bloqueio_ufw_temporal(ip_atacante)
         resultado_soar = f"{res_kill} | {res_ufw}"

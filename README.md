@@ -129,7 +129,7 @@ python engine.py
 Pop-Location
 ```
 
-O ciclo aguarda 3 segundos entre varreduras. O coletor implementado no motor principal é SSH/journalctl; módulos auxiliares de WinRM e outros vetores existem no repositório, mas não são acionados automaticamente por esse ciclo.
+O ciclo aguarda 3 segundos entre varreduras. O coletor usa SSH/journalctl por padrão e pode usar WinRM com `MONITORAMENTO_PROTOCOLO=winrm`; outros vetores permanecem auxiliares.
 
 ### 4.3 `src/groq_client.py`
 
@@ -153,16 +153,14 @@ Os agentes são importados por `app.py`/`engine.py` e usam o cliente compartilha
 
 ## 6. SSH, host key e segurança
 
-### 6.1 Fluxo TOFU
+### 6.1 Fluxo de host key
 
-1. o usuário informa IP e porta;
-2. o frontend chama `POST /api/servidor/fingerprint`;
-3. `obter_fingerprint_host()` obtém a chave pública sem autenticar;
-4. o usuário confirma visualmente tipo e fingerprint;
-5. o cadastro salva `host_key_fingerprint`;
-6. conexões futuras usam `conectar_ssh_verificado()`.
+1. o cadastro obtém a chave pública do host sem autenticar;
+2. o cadastro salva `host_key_fingerprint` no banco operacional;
+3. conexões do painel usam `conectar_ssh_verificado()` e recusam chave ausente ou divergente;
+4. o motor usa `SSH_HOST_KEY_FINGERPRINT` para validar o host monitorado.
 
-Fingerprint ausente gera `ErroHostKeyDesconhecida`. Fingerprint divergente gera `ErroHostKeyDivergente` e a conexão é recusada.
+Fingerprint ausente ou divergente gera `HostKeyNaoAprovada` e a conexão é recusada.
 
 ### 6.2 Credenciais
 
@@ -172,7 +170,7 @@ Isso protege o dado em repouso, mas não contra alguém que controle o processo 
 
 ### 6.3 SOAR
 
-As ações automáticas dependem de severidade `Alta`/`Critica` e de `AUTO_REMEDIATION`:
+As ações automáticas dependem de severidade `Alta`/`Critica`, `ACTIVE_DEFENSE` e `AUTO_REMEDIATION`:
 
 - `derrubar_sessao_ssh_ativa()` procura sessões `sshd` associadas ao IP e usa `kill -9`;
 - `aplicar_bloqueio_ufw_temporal()` executa `ufw insert 1 deny from IP to any`;
@@ -218,7 +216,7 @@ Os templates HTML atuais herdam de `src/templates/base.html`, exceto o arquivo J
 | `auditoria.html` | `/auditoria` | Trilha de auditoria. |
 | `base.html` | compartilhado | Layout, menu, relógio e scripts comuns. |
 
-O dashboard SOC consulta `/data/vanguard_powerbi_data.csv`, `/data/servidores.json` e `/data/agentes_status.json`. Ele não coleta atualmente CPU, RAM, disco ou uptime por host.
+O dashboard SOC consulta `/data/vanguard_powerbi_data.csv`, `/data/servidores.json` e `/data/agentes_status.json`. O endpoint de frota coleta CPU/load, RAM, disco e uptime por SSH verificado quando o host está online.
 
 ## 9. Rotas Flask
 
@@ -287,6 +285,8 @@ VANGUARD_ADMIN_PASSWORD=uma_senha_forte
 VANGUARD_ENCRYPTION_KEY=chave_fernet_base64
 AUTO_REMEDIATION=false
 ACTIVE_DEFENSE=false
+SSH_HOST_KEY_FINGERPRINT=SHA256:impressao_do_host_monitorado
+MONITORAMENTO_PROTOCOLO=ssh
 FLASK_DEBUG=false
 ```
 
@@ -348,7 +348,7 @@ Testes unitários existentes:
 python -m pytest tests/test_engine.py -q
 ```
 
-O teste atual ainda referencia símbolos antigos do motor (`extrair_json_defensivo` e `contar_reincidencia_ip`) e pode falhar na coleta. Isso é uma dívida de manutenção dos testes, não um comando confiável de aceite do sistema.
+Os testes atuais cobrem a contagem de reincidência de IP, o agente de Threat Intelligence e o dashboard com dados reais. A suíte pode ser executada com `pytest -q`.
 
 `scripts/run_tests.py` procura `test_prompts.py` na raiz, mas esse arquivo não está presente; o runner precisa ser atualizado antes de ser usado como suíte oficial.
 
@@ -367,12 +367,12 @@ Os geradores em `src/reports/`, `src/database/` e `src/soar/` são auxiliares. A
 ## 14. Limitações e pontos de atenção
 
 1. O monitor principal coleta apenas o último evento relevante de `journalctl -u ssh`; não é correto afirmar que o ciclo atual monitora Nginx, FTP, Postfix e UFW simultaneamente.
-2. O suporte Windows/WinRM está representado por módulos auxiliares, mas não está integrado ao ciclo principal do `engine.py`.
-3. O dashboard usa dados reais de eventos, frota e agentes, mas não coleta CPU, RAM, disco ou uptime por host.
-4. `executar_acao_servidor()` ainda usa `paramiko.AutoAddPolicy()` em um caminho antigo do painel, enquanto o motor usa TOFU. Esse caminho deve migrar para `conectar_ssh_verificado()`.
-5. `ACTIVE_DEFENSE` existe na configuração, mas o caminho principal de contenção depende principalmente de `AUTO_REMEDIATION` e da severidade.
+2. O ciclo principal suporta SSH por padrão e WinRM quando `MONITORAMENTO_PROTOCOLO=winrm`; a coleta Windows depende de conectividade WinRM e permissões no log Security.
+3. O dashboard usa dados reais de eventos, frota e agentes e coleta CPU/load, RAM, disco e uptime por host online via SSH verificado.
+4. `executar_acao_servidor()`, o backup do painel e os caminhos de contenção do motor usam `conectar_ssh_verificado()`. Módulos auxiliares legados ainda podem usar `AutoAddPolicy()` e precisam ser migrados antes de serem tratados como caminhos ativos.
+5. A contenção principal exige `ACTIVE_DEFENSE=true`, `AUTO_REMEDIATION=true` e severidade alta ou crítica.
 6. `nmap` precisa estar instalado no sistema operacional.
-7. GeoIP depende de `ip-api.com` por HTTP e de rede externa.
+7. GeoIP depende de `ip-api.com` por HTTPS e de rede externa.
 8. Chamadas Groq enviam telemetria a serviço externo; revise LGPD, retenção e anonimização antes de usar logs sensíveis.
 9. `database.py`, `vanguardsec.db`, `app_backup.py` e alguns geradores PDF são legados/auxiliares e não devem ser tratados como caminhos ativos sem validação.
 
