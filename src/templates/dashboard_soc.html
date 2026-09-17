@@ -155,6 +155,36 @@
             color: #f1f5f9;
         }
 
+        .table-soc tbody tr,
+        .table-soc tbody td {
+            background-color: #111827 !important;
+            color: #f8fafc !important;
+        }
+
+        .table-soc tbody td code {
+            color: #93c5fd !important;
+            background-color: #0b1220;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        .event-log td {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            line-height: 1.35;
+        }
+
+        .event-log td:first-child,
+        .event-log td code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            white-space: nowrap;
+        }
+
+        .event-log td:nth-child(3) {
+            min-width: 180px;
+        }
+
         .cisa-item {
             background: #0f172a;
             border: 1px solid var(--border-color);
@@ -247,7 +277,7 @@
                                     <th>Mitigação SOAR</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabela-bruta" class="font-mono">
+                            <tbody id="tabela-bruta" class="event-log">
                                 <tr><td colspan="5" class="text-center py-3 text-muted">Carregando logs...</td></tr>
                             </tbody>
                         </table>

@@ -1,7 +1,7 @@
-# 🛡️ VanguardSec AI — Visão Geral & Proposta de Valor
+# VanguardSec AI — Visão Geral
 
 ## O Que É o VanguardSec AI?
-O **VanguardSec AI** é uma plataforma autônoma de *SecOps*, *Threat Intelligence* e resposta a incidentes de nível corporativo. Ele opera de forma integrada utilizando inteligência artificial local (**Ollama** com o modelo `qwen2.5:3b`)[cite: 2, 5], garantindo total soberania e privacidade dos dados corporativos sem envio de informações para APIs de terceiros.
+O **VanguardSec AI** é uma aplicação Flask para monitoramento SSH/WinRM, triagem de eventos, enriquecimento de ameaças, compliance e ações SOAR. Os agentes usam o cliente Groq configurado em `GROQ_API_KEY` e `GROQ_MODEL`; portanto, os dados enviados à IA não são exclusivamente locais.
 
 ## O Problema Resolvido
 Operações de segurança tradicionais sofrem com gargalos críticos:
@@ -10,6 +10,9 @@ Operações de segurança tradicionais sofrem com gargalos críticos:
 * **Complexidade Regulatória:** Cruzar logs de segurança com normas como **LGPD (Art. 46)** e **ISO 27001** manualmente é ineficiente.
 
 ## Nossos Diferenciais
-* **Abordagem *Agentless*:** Conexão direta e segura via SSH (Paramiko) para Linux e WinRM para Windows, sem poluir os servidores monitorados com agentes pesados[cite: 1, 2].
-* **Governança de Temperatura Determinística:** Uso de temperatura `0.0` em módulos críticos de remediação para evitar alucinações ao gerar códigos de infraestrutura.
-* **Automação Completa via ChatOps e SOAR:** Resposta a incidentes automatizada com 1 clique pelo Telegram ou pelo painel web[cite: 1, 2].
+* **Coleta agentless:** Paramiko para SSH e WinRM para Windows, sem instalar agente no servidor monitorado.
+* **Host key pinning:** a conexão só autentica quando o fingerprint aprovado coincide.
+* **Pipeline estruturado:** agentes retornam JSON e o resultado é salvo no SQLite quando há evento de ataque.
+* **SOAR controlável:** bloqueio UFW e encerramento de sessão são condicionados por configuração e limiar de reincidência.
+
+Telegram, Ollama e processamento exclusivamente local não fazem parte do fluxo atual documentado.

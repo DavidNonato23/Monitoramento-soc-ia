@@ -8,5 +8,9 @@ O **VanguardSec AI** foi projetado para o mercado **Mid-Market e PMEs** (50 a 50
 
 ## 2. Diferencial Competitivo & ROI
 * **Baixo Custo Operacional:** Automação de Nível 1, 2 e 3 sem custo excessivo de pessoal.
-* **Privacidade Total (On-Premise) ou Nuvem Fracionada:** Suporte a execução 100% local (sem custo por token) ou via APIs de baixo custo (ex: GPT-4o-mini).
+* **Implantação controlada:** coleta e banco podem permanecer no ambiente do cliente, mas os agentes atuais usam Groq quando chamados; não prometer processamento 100% local.
 * **Mitigação Autônoma (SOAR):** Bloqueio imediato no firewall (UFW) sem custo de licenciamento adicional.
+
+## Escopo atual
+
+O produto entrega painel Flask, monitoramento SSH/WinRM, análise por agentes, auditorias Nmap/CVE/TLS/backup e relatórios PDF. Disponibilidade 24/7, integração Telegram, modelo local e SLA comercial dependem de projeto adicional.

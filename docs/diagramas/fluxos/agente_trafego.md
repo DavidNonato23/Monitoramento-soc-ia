@@ -1,15 +1,12 @@
-# Fluxo de Execução - Agente de Tráfego (Tier 1.5)
+# Fluxo de Execução - Agente de Tráfego
 
-​```mermaid
+```mermaid
 flowchart TD
-    A["1. Ingestão de Netflow / Logs de Rede<br/>(Conexões TCP/UDP, Port Scans, Fluxos)"]
-    B["2. Camada de Prompt & Guardrails<br/>Especialista em Tráfego<br/>Enforced JSON Schema"]
-    C["3. Motor de Inferência (Ollama)<br/><b>Qwen 2.5:3b</b><br/>Temperatura=0.1 · num_predict"]
-    D["4. Sanitização e Parse Dinâmico"]
-
+    A["1. Dados de tráfego fornecidos"]
+    B["2. Prompt especializado e schema JSON"]
+    C["3. Cliente Groq / GROQ_MODEL"]
+    D["4. Padrão, risco e recomendação"]
     A --> B --> C --> D
-​```
+```
 
-**Características do Agente de Tráfego:**
-- Opera em paralelo ao Tier 1, focado exclusivamente em metadados de rede (não payload de log).
-- Enforced JSON Schema reduz a necessidade de reparo de saída na etapa de parse.
+O agente de tráfego é auxiliar. A coleta de NetFlow ou captura equivalente não é realizada pelo fluxo principal do `engine.py`.

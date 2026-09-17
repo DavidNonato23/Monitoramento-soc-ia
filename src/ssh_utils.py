@@ -57,7 +57,7 @@ def conectar_ssh_verificado(
     porta: int,
     usuario: str,
     senha: str,
-    fingerprint_aprovado: str,
+    fingerprint_aprovado: str | None,
     timeout: int = 5,
 ):
     """Autentica via SSH somente depois de validar a chave pública pinada."""

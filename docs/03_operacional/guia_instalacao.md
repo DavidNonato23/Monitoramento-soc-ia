@@ -1,19 +1,45 @@
-# 🚀 Guia de Instalação e Execução
+# Guia de Instalação e Execução
 
 ## Pré-requisitos
-* **Python:** Versão 3.10 ou superior[cite: 2].
-* **Ollama Engine:** Instalado e executando localmente na porta padrão (`http://localhost:11434`) com o modelo `qwen2.5:3b` baixado[cite: 2, 5].
-* **Acesso Remoto:** SSH habilitado nos servidores alvo[cite: 2].
+* **Python:** versão compatível com o ambiente do projeto; Python 3.10+ é recomendado.
+* **Dependências:** instalar `requirements.txt` no ambiente virtual.
+* **Nmap:** necessário para a auditoria Nmap/NSE e disponível no `PATH`.
+* **Acesso remoto:** SSH habilitado no Linux ou WinRM configurado no Windows.
+* **Groq:** `GROQ_API_KEY` obrigatória para os agentes de IA.
 
 ## Execução Automatizada (Windows)
-Basta utilizar o script `start.bat` localizado na raiz do repositório[cite: 2]. Ele executa automaticamente as seguintes etapas:
-1. Validação do ambiente Python.
-2. Criação e ativação do ambiente virtual (`venv`)[cite: 2].
-3. Instalação das dependências listadas em `requirements.txt`[cite: 2].
-4. Inicialização do painel Streamlit na porta `8501`[cite: 2].
+No PowerShell:
 
-## Configuração do ChatOps (Telegram)
-Para habilitar os alertas interativos e bloqueios por 1 clique no celular:
-1. Configure as variáveis de ambiente ou insira os dados na aba de configurações do painel[cite: 2]:
-   - `TELEGRAM_BOT_TOKEN` (gerado pelo `@BotFather`)[cite: 2]
-   - `TELEGRAM_ALLOWED_USER_ID` (seu ID de usuário obtido no `@userinfobot`)[cite: 2]
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python src/app.py
+```
+
+O Flask atende por padrão em `http://127.0.0.1:5000`. O motor contínuo é executado separadamente:
+
+```powershell
+python src/engine.py
+```
+
+## Configuração do `.env`
+
+Defina, no mínimo:
+
+```env
+VANGUARD_ADMIN_USER=admin
+VANGUARD_ADMIN_PASSWORD=uma-senha-forte
+GROQ_API_KEY=sua-chave
+SSH_HOST=192.168.15.6
+SSH_PORT=22
+SSH_USER=usuario
+SSH_PASSWORD=senha
+SSH_HOST_KEY_FINGERPRINT=SHA256:...
+```
+
+Opcionalmente, use `GROQ_MODEL`, `MONITORAMENTO_PROTOCOLO`, `ACTIVE_DEFENSE`, `AUTO_REMEDIATION` e `GERAR_PDF`. Não versione o `.env`.
+
+## Cadastro do fingerprint
+
+O cadastro de um servidor obtém a chave pública antes de gravar o ativo. Confirme o fingerprint por um canal confiável. Não desative a validação de host key para contornar erro de conexão.

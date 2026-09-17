@@ -2,15 +2,15 @@
 ```text
 [ Documentação do Projeto: VanguardSec AI ]
        │
-       ├─► [ docs/arquitetura_multivetvetor.md ] ──► Arquitetura Multi-Vetor & Coleta Avançada
-       └─► [ docs/engenharia_prompts_tiers.md ] ──► Engenharia de Prompts, Tiers & Benchmark
+       ├─► [ docs/02_arquitetura/ARQUITETURA.md ] ──► Fluxo de coleta, agentes e persistência
+       └─► [ docs/02_arquitetura/engenharia_prompts.md ] ──► Contratos de saída dos agentes
                                                         │
                                                         ▼
                                          [ Status Atual Consolidado ]
                                                         │
-                                                        ├─► Motor Multi-Vetor Ativo (engine.py)
-                                                        ├─► Persistência SQLite & Power BI (database.py)
-                                                        └─► Esteira Multi-Tier com LLM Local (Ollama)
+                                                        ├─► Motor de monitoramento (src/engine.py)
+                                                        ├─► Persistência SQLite (data/vanguard_sec.db)
+                                                        └─► Agentes JSON via cliente Groq (src/ai/groq_client.py)
 
 ```
 

@@ -1,17 +1,11 @@
 # Schema JSON - Agente Tier 2 (Compliance)
 
-​```json
+```json
 {
-  "raciocinio_cot": "STRING (resumido)",
-  "artigo_lgpd": "STRING",
-  "controle_iso": "STRING",
-  "risco_normativo": "STRING"
+  "artigo_lgpd": "Artigo 46 - Segurança e Privacidade",
+  "controle_iso": "Controle ISO relacionado",
+  "risco_normativo": "Descrição do risco regulatório"
 }
-​```
+```
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `raciocinio_cot` | string | Cadeia de raciocínio resumida (chain-of-thought) |
-| `artigo_lgpd` | string | Artigo da LGPD mais aderente ao evento |
-| `controle_iso` | string | Controle ISO 27001/27002 relacionado |
-| `risco_normativo` | string | Descrição do risco regulatório identificado |
+O resultado é usado no registro consolidado e no relatório. Não incluir cadeia de raciocínio privada na saída.

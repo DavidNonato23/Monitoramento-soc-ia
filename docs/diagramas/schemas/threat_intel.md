@@ -1,19 +1,13 @@
 # Schema JSON - Threat Intelligence
 
-​```json
+```json
 {
-  "indicador": "STRING",
+  "indicador": "192.0.2.10",
   "reputacao": "Malicioso | Suspeito | Limpo | Desconhecido",
-  "familia_malware": "STRING | null",
-  "campanha_associada": "STRING | null",
+  "familia_malware": null,
+  "campanha_associada": null,
   "nivel_confianca": "Alta | Media | Baixa"
 }
-​```
+```
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `indicador` | string | O IoC analisado (IP, hash, domínio) |
-| `reputacao` | enum | `Malicioso` \| `Suspeito` \| `Limpo` \| `Desconhecido` |
-| `familia_malware` | string \| null | Família de malware associada, se houver |
-| `campanha_associada` | string \| null | Campanha/ator de ameaça associado, se houver |
-| `nivel_confianca` | enum | `Alta` \| `Media` \| `Baixa` |
+A saída de inteligência é contextual e não deve ser usada como única prova para uma decisão crítica.

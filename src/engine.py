@@ -30,7 +30,12 @@ from ai.agente_auditor import executar_agente_auditor
 from ai.agente_compliance import executar_agente_compliance
 from ai.agente_remediacao import executar_agente_remediacao
 from ai.agente_threat_intel import executar_agente_threat_intel
-from ssh_utils import conectar_ssh_verificado, ip_valido, executar_comando_sudo
+from ssh_utils import (
+    HostKeyNaoAprovada,
+    conectar_ssh_verificado,
+    ip_valido,
+    executar_comando_sudo,
+)
 from soar.coletor_winrm import coletar_dados_windows
 
 dotenv.load_dotenv()
@@ -246,11 +251,28 @@ def coletar_logs_multi_servico() -> dict:
             }
         return {"is_ataque": False, "log_raw": "", "ip": host}
 
-    ssh = conectar_ssh_verificado(
-        host, porta, usuario, senha, SSH_HOST_KEY_FINGERPRINT, timeout=2
-    )
     try:
-        ssh.connect(host, port=porta, username=usuario, password=senha, timeout=2)
+        ssh = conectar_ssh_verificado(
+            host, porta, usuario, senha, SSH_HOST_KEY_FINGERPRINT, timeout=2
+        )
+    except HostKeyNaoAprovada as exc:
+        logger.error(
+            "Host key SSH não aprovada para %s:%s. Configure "
+            "SSH_HOST_KEY_FINGERPRINT com o fingerprint detectado: %s",
+            host,
+            porta,
+            exc,
+        )
+        return {"is_ataque": False, "log_raw": "", "ip": host}
+    except (paramiko.SSHException, OSError) as exc:
+        logger.warning(
+            "SSH indisponível em %s:%s; nova tentativa no próximo ciclo: %s",
+            host,
+            porta,
+            exc,
+        )
+        return {"is_ataque": False, "log_raw": "", "ip": host}
+    try:
         log_ssh, _ = executar_comando_sudo(
             ssh,
             "journalctl -u ssh -n 15 --no-pager 2>/dev/null | grep -iE 'Failed|Invalid|error|unix_chkpwd' | tail -n 1",

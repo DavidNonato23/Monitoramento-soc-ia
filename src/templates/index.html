@@ -39,6 +39,12 @@
         .table-soc { font-size: 0.82rem; color: #ffffff; margin-bottom: 0; background-color: var(--bg-surface); }
         .table-soc th { background-color: rgba(255, 255, 255, 0.05); color: #e2e8f0; font-weight: 700; border-bottom: 1px solid var(--border-color); font-size: 0.72rem; text-transform: uppercase; }
         .table-soc td { border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: middle; padding: 8px 12px; color: #f1f5f9; }
+        .table-soc tbody tr,
+        .table-soc tbody td { background-color: #111827 !important; color: #f8fafc !important; }
+        .table-soc tbody td code { color: #93c5fd !important; background-color: #0b1220; padding: 2px 5px; border-radius: 3px; }
+        .event-log td { font-family: 'Inter', sans-serif; font-size: 0.88rem; line-height: 1.35; }
+        .event-log td:first-child, .event-log td code { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; white-space: nowrap; }
+        .event-log td:nth-child(3) { min-width: 180px; }
         .cisa-item { background: #0f172a; border: 1px solid var(--border-color); border-left: 3px solid var(--accent-yellow); border-radius: 4px; padding: 8px 12px; margin-bottom: 8px; font-size: 0.78rem; color: #f1f5f9; }
         .text-muted { color: #cbd5e1 !important; }
         .soc-footer { background-color: var(--bg-sidebar); border-top: 1px solid var(--border-color); padding: 8px 24px; font-size: 0.75rem; color: #cbd5e1; margin-left: 240px; display: flex; justify-content: space-between; }
@@ -91,7 +97,7 @@
                     <div class="table-responsive mt-2" style="max-height: 250px; overflow-y: auto;">
                         <table class="table table-soc align-middle">
                             <thead><tr><th>Timestamp</th><th>Severidade</th><th>Evento</th><th>IP Origem</th><th>Mitigação SOAR</th></tr></thead>
-                            <tbody id="tabela-bruta" class="font-mono"><tr><td colspan="5" class="text-center py-3 text-muted">Carregando logs...</td></tr></tbody>
+                            <tbody id="tabela-bruta" class="event-log"><tr><td colspan="5" class="text-center py-3 text-muted">Carregando logs...</td></tr></tbody>
                         </table>
                     </div>
                 </div>

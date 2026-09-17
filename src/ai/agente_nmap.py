@@ -27,6 +27,7 @@ def executar_varredura_nmap(ip_alvo: str) -> dict:
         logger.warning("IP '%s' rejeitado por não ser um IPv4 válido — varredura abortada.", ip_alvo)
         return {
             "host_alvo": ip_alvo,
+            "status_varredura": "ip_invalido",
             "portas_e_servicos": [],
             "nivel_risco": "Indeterminado",
             "recomendacao_imediata": f"IP '{ip_alvo}' com formato inválido — varredura abortada por segurança."
@@ -49,6 +50,7 @@ def executar_varredura_nmap(ip_alvo: str) -> dict:
         logger.error(f"Timeout na varredura Nmap de {ip_alvo}")
         return {
             "host_alvo": ip_alvo,
+            "status_varredura": "timeout",
             "portas_e_servicos": [],
             "nivel_risco": "Indeterminado",
             "recomendacao_imediata": "Varredura excedeu o tempo limite (120s). Host pode estar filtrando pacotes ou ter muitas portas abertas."
@@ -57,11 +59,15 @@ def executar_varredura_nmap(ip_alvo: str) -> dict:
         saida_nmap = e.stdout if e.stdout else e.stderr
     except FileNotFoundError:
         logger.error("O executável do Nmap não foi encontrado no sistema.")
-        return {"erro_execucao_nmap": "Nmap não instalado ou ausente no PATH."}
+        return {
+            "status_varredura": "nmap_ausente",
+            "erro_execucao_nmap": "Nmap não instalado ou ausente no PATH."
+        }
 
     if "0 hosts up" in saida_nmap or not saida_nmap.strip():
         return {
             "host_alvo": ip_alvo,
+            "status_varredura": "host_inacessivel",
             "portas_e_servicos": [],
             "nivel_risco": "Indeterminado",
             "recomendacao_imediata": "O host alvo não respondeu ou encontra-se inacessível. Verifique o IP ou regras de firewall."

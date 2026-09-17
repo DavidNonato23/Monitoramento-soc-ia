@@ -1,15 +1,12 @@
 # Fluxo de Execução - Agente de Threat Intelligence
 
-​```mermaid
+```mermaid
 flowchart TD
-    A["1. Ingestão de IoCs e Artefatos<br/>(IPs, Hashes, Domínios Isolados)"]
-    B["2. Camada de Prompt & Contextualização<br/>Analista Threat Intel<br/>Enforced JSON Schema"]
-    C["3. Motor de Inferência (Ollama)<br/><b>Qwen 2.5:3b</b><br/>Temperatura=0.1 · num_predict"]
-    D["4. Sanitização e Parse Dinâmico"]
-
+    A["1. IP ou artefato do Tier 1"]
+    B["2. Prompt de contextualização"]
+    C["3. Cliente Groq / GROQ_MODEL"]
+    D["4. Reputação e contexto em JSON"]
     A --> B --> C --> D
-​```
+```
 
-**Características do Agente de Threat Intel:**
-- Recebe IoCs já extraídos (não logs brutos), tipicamente vindos do Tier 1 ou do Agente de Tráfego.
-- Enriquece com reputação, família de malware e campanha associada, quando aplicável.
+A resposta é um sinal analítico e deve ser confirmada em fontes confiáveis antes de decisões de alto impacto.

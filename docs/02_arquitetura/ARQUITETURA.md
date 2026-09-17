@@ -1,19 +1,22 @@
-# 🗺️ Arquitetura do Sistema & Esteira Multi-Tier
+# Arquitetura do Sistema e Esteira Multi-Tier
 
 ## Fluxo Operacional (Multi-Tier Pipeline)
-O motor do VanguardSec AI processa os eventos de segurança em camadas sequenciais:
+O VanguardSec AI é uma aplicação Flask com persistência SQLite e coleta remota. O fluxo principal do motor (`src/engine.py`) é:
 
-1. **Coleta Telemétrica (*Agentless* Inbound):** 
-   - Captura logs de autenticação (`/var/log/auth.log`, `journalctl`) via SSH[cite: 3, 5].
-   - Monitora métricas locais de hardware e portas abertas (`LISTEN`) via `psutil`[cite: 1, 2].
-2. **Tier 1 — Analista SOC (`agente_auditor.py`):**
-   - Extrai Indicadores de Comprometimento (IoCs), IPs de origem e calcula a severidade inicial do evento[cite: 1, 2].
-3. **Tier 2 — Compliance & Governança (`agente_compliance.py`):**
-   - Cruza o evento com as diretrizes normativas (LGPD e ISO 27001) armazenadas na pasta `./politicas/`[cite: 1, 3, 5].
-4. **Tier 3 — Engenheiro SOAR (`agente_remediacao.py`):**
-   - Compila o playbook de resposta automatizada e gera o comando de contenção seguro[cite: 1, 2].
+1. **Coleta:** `journalctl -u ssh` via SSH verificado no Linux ou eventos de falha via WinRM quando `MONITORAMENTO_PROTOCOLO=winrm`.
+2. **Tier 1:** `agente_auditor.py` extrai IoCs, categoria, severidade e ação recomendada.
+3. **Threat Intelligence:** `agente_threat_intel.py` recebe o IP/artefato identificado e gera enriquecimento.
+4. **Tier 2:** `agente_compliance.py` relaciona o evento a LGPD/ISO.
+5. **Tier 3:** `agente_remediacao.py` gera a recomendação SOAR.
+6. **Persistência:** eventos confirmados são gravados na tabela `scans` do SQLite.
 
 ## Persistência e Apresentação
-* **Banco de Dados Relacional:** SQLite (`vanguard_sec.db`) para armazenamento estruturado de todos os scans[cite: 3, 5].
-* **Exportação para BI:** Arquivo CSV (`vanguard_powerbi_data.csv`) para compatibilidade com relatórios externos[cite: 3, 5].
-* **Interfaces Outbound:** Dashboard interativo em Streamlit, relatórios executivos em PDF (`ReportLab`) e alertas interativos no Telegram[cite: 1, 2, 5].
+* **Banco de dados:** SQLite em `data/vanguard_sec.db`, com tabelas `scans`, `servidores` e `agentes_logs`.
+* **Interface:** páginas Flask/Jinja em `src/templates/`, protegidas por HTTP Basic Auth.
+* **IA:** cliente compartilhado em `src/ai/groq_client.py`, usando `GROQ_MODEL` ou `openai/gpt-oss-20b` por padrão.
+* **Relatórios:** PDFs gerados com ReportLab; exportação CSV é disponibilizada pela aplicação quando configurada.
+* **Ações SOAR:** Kill Switch e bloqueio UFW dependem de `ACTIVE_DEFENSE` e `AUTO_REMEDIATION`.
+
+## Limites e segurança
+
+O fingerprint SSH precisa estar aprovado antes da autenticação. Ausência ou divergência gera `HostKeyNaoAprovada`. O comando produzido por um agente não deve ser tratado como confiável sem validação; use `AUTO_REMEDIATION=false` em laboratório.

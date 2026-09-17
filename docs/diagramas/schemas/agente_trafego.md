@@ -1,23 +1,16 @@
 # Schema JSON - Agente de Tráfego
 
-​```json
+```json
 {
   "analise_trafego": {
-    "ip_origem": "STRING | null",
-    "porta_destino": "STRING | null",
-    "protocolo": "STRING"
+    "ip_origem": "192.0.2.10",
+    "porta_destino": "22",
+    "protocolo": "TCP"
   },
-  "padrao_anomalia": "STRING",
+  "padrao_anomalia": "Port scan",
   "classificacao_risco": "Baixa | Media | Alta | Critica",
-  "acao_recomendada": "STRING"
+  "acao_recomendada": "Ação sugerida"
 }
-​```
+```
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `analise_trafego.ip_origem` | string \| null | IP de origem do fluxo |
-| `analise_trafego.porta_destino` | string \| null | Porta de destino observada |
-| `analise_trafego.protocolo` | string | Protocolo (TCP/UDP/ICMP etc.) |
-| `padrao_anomalia` | string | Padrão de anomalia identificado (ex: port scan) |
-| `classificacao_risco` | enum | `Baixa` \| `Media` \| `Alta` \| `Critica` |
-| `acao_recomendada` | string | Ação sugerida em texto livre |
+O agente depende de dados de tráfego fornecidos por outra coleta; ele não captura NetFlow no fluxo principal.

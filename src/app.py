@@ -676,8 +676,10 @@ def api_pentest_nmap():
     
     try:
         relatorio_nmap = executar_varredura_nmap(ip_alvo)
+        status_varredura = relatorio_nmap.get("status_varredura", "concluida")
+        status_api = "aviso" if status_varredura != "concluida" else "sucesso"
         return jsonify({
-            "status": "sucesso",
+            "status": status_api,
             "modulo": "Item 1 - Nmap + NSE vuln scripts",
             "resultado": relatorio_nmap
         })

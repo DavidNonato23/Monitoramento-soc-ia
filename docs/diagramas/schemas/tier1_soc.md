@@ -1,23 +1,18 @@
 # Schema JSON - Agente Tier 1 (SOC Core)
 
-​```json
-{
-  "indicadores_ioc": {
-    "ip_origem": "STRING | null",
-    "usuario_alvo": "STRING | null",
-    "servico": "STRING"
-  },
-  "categoria_ameaca": "STRING",
-  "severidade": "Baixa | Media | Alta | Critica",
-  "acao_recomendada": "STRING"
-}
-​```
+O agente deve retornar um objeto JSON com os campos consumidos por `src/engine.py`:
 
-| Campo | Tipo | Descrição |
-|---|---|---|
-| `indicadores_ioc.ip_origem` | string \| null | IP de origem do evento, se identificado |
-| `indicadores_ioc.usuario_alvo` | string \| null | Usuário/conta associada ao evento |
-| `indicadores_ioc.servico` | string | Serviço/porta/protocolo envolvido |
-| `categoria_ameaca` | string | Classificação livre da ameaça (ex: brute-force, scan) |
-| `severidade` | enum | `Baixa` \| `Media` \| `Alta` \| `Critica` |
-| `acao_recomendada` | string | Ação sugerida em texto livre |
+```json
+{
+  "severidade": "BAIXO | MEDIO | ALTO | CRITICO",
+  "tipo_evento": "Descrição da anomalia",
+  "indicadores_ioc": {
+    "ip_origem": "192.0.2.10",
+    "usuario_alvo": "root",
+    "servico": "ssh"
+  },
+  "acao_recomendada": "Ação analítica inicial"
+}
+```
+
+`indicadores_ioc.ip_origem` pode ser nulo. O código trata campos ausentes com valores padrão.
